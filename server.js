@@ -9,7 +9,7 @@ const io = new Server(server, {
   maxHttpBufferSize: 5 * 1024 * 1024 // allow chunked file pieces up to 5MB each
 });
 
-app.use(express.static(path.join(__dirname, 'index.html')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // roomId -> Map(socketId -> displayName)
 const rooms = new Map();
