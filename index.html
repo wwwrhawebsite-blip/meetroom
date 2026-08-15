@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MeetRoom — call, chat, share</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== JOIN SCREEN ===== -->
+<section id="join-screen" class="join-screen">
+  <div class="join-card">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">MeetRoom</span>
+    </div>
+    <h1>Step into a room</h1>
+    <p class="sub">Call, chat, and share files with up to 15 people — no download, just a link.</p>
+
+    <label class="field">
+      <span>Your name</span>
+      <input id="name-input" type="text" placeholder="e.g. Imran" maxlength="30" autocomplete="off" />
+    </label>
+
+    <label class="field">
+      <span>Room code</span>
+      <div class="room-row">
+        <input id="room-input" type="text" placeholder="e.g. blue-harbor" maxlength="40" autocomplete="off" />
+        <button id="generate-room" type="button" title="Generate a room code">⟳</button>
+      </div>
+    </label>
+
+    <button id="join-btn" class="primary-btn">Join room</button>
+    <p class="hint">Share the room code with others so they can join the same room.</p>
+  </div>
+</section>
+
+<!-- ===== CALL SCREEN ===== -->
+<section id="call-screen" class="call-screen hidden">
+  <header class="topbar">
+    <div class="room-info">
+      <span class="brand-mark small"></span>
+      <span id="room-label" class="room-code-label"></span>
+      <button id="copy-link" class="copy-btn" title="Copy room link">Copy link</button>
+    </div>
+    <div class="member-count"><span id="member-count">1</span> in room</div>
+  </header>
+
+  <main class="stage-wrap">
+    <div id="video-grid" class="video-grid"></div>
+  </main>
+
+  <aside id="side-panel" class="side-panel">
+    <div class="panel-tabs">
+      <button class="tab-btn active" data-tab="chat">Chat</button>
+      <button class="tab-btn" data-tab="files">Files</button>
+      <button class="tab-btn" data-tab="people">People</button>
+    </div>
+
+    <div id="tab-chat" class="tab-pane active">
+      <div id="chat-log" class="chat-log"></div>
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" placeholder="Message the room…" autocomplete="off" maxlength="2000" />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+
+    <div id="tab-files" class="tab-pane">
+      <label class="file-drop" for="file-input">
+        <span>Click to send a file or photo</span>
+        <input id="file-input" type="file" hidden />
+      </label>
+      <div id="file-log" class="file-log"></div>
+    </div>
+
+    <div id="tab-people" class="tab-pane">
+      <ul id="people-list" class="people-list"></ul>
+    </div>
+  </aside>
+
+  <footer class="controls">
+    <button id="toggle-mic" class="ctrl-btn active" title="Mute / unmute">
+      <span class="ic mic"></span>
+    </button>
+    <button id="toggle-cam" class="ctrl-btn active" title="Camera on / off">
+      <span class="ic cam"></span>
+    </button>
+    <button id="toggle-panel" class="ctrl-btn" title="Toggle chat panel">
+      <span class="ic chat"></span>
+    </button>
+    <button id="leave-btn" class="ctrl-btn leave" title="Leave room">Leave</button>
+  </footer>
+</section>
+
+<div id="toast" class="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
