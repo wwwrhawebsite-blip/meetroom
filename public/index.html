@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Your Day Diary</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,16 +22,15 @@
     --amber:#0095f6;
     --amber-bright:#1877f2;
     --amber-soft:rgba(0,149,246,.10);
-    --rose:#ed4956;
+    --rose:#d6e831;
     --rose-soft:rgba(237,73,86,.10);
     --green:#2ecc71;
     --shadow: 0 8px 32px rgba(0,0,0,.10);
     --radius: 12px;
-    /* glass surfaces */
     --glass:rgba(255,255,255,.68);
     --glass-strong:rgba(255,255,255,.85);
     --glass-border:rgba(255,255,255,.6);
-    --ig-gradient: linear-gradient(45deg,#f9ce34 0%,#ee2a7b 45%,#6228d7 100%);
+    --ig-gradient: linear-gradient(45deg,#f9ce34 0%,#ee2a7b 45%,#46c4ef 100%);
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
@@ -46,6 +45,7 @@
     color:var(--paper);
     font-family:'Inter',system-ui,sans-serif;
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
   ::selection{ background:var(--amber-soft); color:var(--paper); }
   ::-webkit-scrollbar{ width:9px; height:9px; }
@@ -59,7 +59,6 @@
   .mono{ font-family:'IBM Plex Mono',monospace; }
   .wordmark{ font-family:'Grand Hotel',cursive; font-weight:400; font-size:26px; letter-spacing:.01em; background:var(--ig-gradient); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
 
-  /* ---------------- utility ---------------- */
   .hidden{ display:none !important; }
   .row{ display:flex; align-items:center; }
   .between{ justify-content:space-between; }
@@ -107,7 +106,25 @@
   .avatar-wrap{ position:relative; flex-shrink:0; }
   .avatar-wrap .dot{ position:absolute; right:0; bottom:0; border:2px solid var(--ink-850); }
 
-  /* ---------------- auth screen ---------------- */
+  /* ---------------- app is mobile-only: everything is centered in a
+     phone-width column; on wide screens it sits inside a soft frame ---- */
+  html{ background:#0c0d12; }
+  body{ display:flex; justify-content:center; }
+  #phoneFrame{
+    width:100%; max-width:480px; min-height:100vh; position:relative;
+    background:
+      radial-gradient(900px 560px at 8% -8%, rgba(249,206,52,.22), transparent 55%),
+      radial-gradient(900px 560px at 88% 6%, rgba(238,42,123,.16), transparent 55%),
+      radial-gradient(1000px 640px at 50% 105%, rgba(98,40,215,.14), transparent 55%),
+      var(--ink-900);
+    box-shadow: 0 0 0 1px var(--line-soft);
+    overflow:hidden;
+  }
+  @media (min-width:481px){
+    body{ padding:28px 0; }
+    #phoneFrame{ min-height:calc(100vh - 56px); border-radius:34px; box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 10px #111319, 0 0 0 12px #2a2d38; }
+  }
+
   #authView{
     min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
   }
@@ -132,18 +149,39 @@
   .auth-toggle button{ background:none; border:none; color:var(--amber); font-weight:600; cursor:pointer; font-size:14px; padding:0; }
   .auth-error{ background:var(--rose-soft); color:var(--rose); border:1px solid transparent; padding:10px 12px; border-radius:8px; font-size:13.5px; margin-bottom:14px; display:none; }
 
-  /* ---------------- shell ---------------- */
-  #appView{ display:none; min-height:100vh; }
+  #appView{ display:none; min-height:100vh; flex-direction:column; }
   #appView.active{ display:flex; }
 
-  .rail{
-    width:76px; flex-shrink:0; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-    border-right:1px solid var(--glass-border);
-    display:flex; flex-direction:column; align-items:center; padding:20px 0; gap:6px; position:sticky; top:0; height:100vh; z-index:50;
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  .topbar{
+    height:56px; flex-shrink:0; border-bottom:1px solid var(--glass-border); display:flex; align-items:center;
+    justify-content:space-between; padding:0 16px; background:var(--glass);
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); position:sticky; top:0; z-index:40;
   }
-  .rail .brand-mark{ margin-bottom:18px; }
+  .topbar h2{ font-size:17px; font-weight:600; margin:0; }
+  .view-scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:70px; }
+  .page{ max-width:640px; margin:0 auto; padding:18px 16px 24px; }
+  .page.wide{ max-width:920px; }
+
+  .toast-wrap{ position:fixed; bottom:calc(72px + env(safe-area-inset-bottom)); left:12px; right:12px; z-index:200; display:flex; flex-direction:column; gap:10px; max-width:480px; margin:0 auto; }
+  .toast{
+    background:var(--glass-strong); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border:1px solid var(--glass-border); border-left:3px solid var(--amber); padding:12px 16px;
+    color:var(--paper); border-radius:10px; box-shadow:var(--shadow); font-size:13.5px; animation:slideIn .25s ease;
+  }
+  @keyframes slideIn{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* ---------------- rail / bottom tab bar ---------------- */
+  .rail{
+    position:fixed; bottom:0; left:0; right:0; width:100%; max-width:480px; margin:0 auto; height:auto;
+    display:flex; flex-direction:row; justify-content:space-around; align-items:center;
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+    background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border-top:1px solid var(--glass-border); z-index:120; gap:0;
+  }
+  .rail .brand-mark{ display:none; }
   .rail-btn{
-    width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    width:auto; min-width:44px; height:44px; flex:1; border-radius:12px; display:flex; align-items:center; justify-content:center;
     color:var(--paper-faint); cursor:pointer; border:1px solid transparent; background:none; position:relative;
   }
   .rail-btn svg{ width:21px; height:21px; }
@@ -153,62 +191,49 @@
     position:absolute; top:2px; right:2px; background:var(--rose); color:#fff; font-size:10px; font-weight:700;
     min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px;
   }
-  .rail-spacer{ flex:1; }
-  .rail-self{ margin-bottom:6px; cursor:pointer; }
+  .rail-spacer{ display:none; }
+  .rail-self{ order:99; margin-bottom:0; cursor:pointer; }
+  .rail-self .avatar{ width:28px; height:28px; font-size:12px; }
 
-  .main{ flex:1; min-width:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
-  .topbar{
-    height:64px; flex-shrink:0; border-bottom:1px solid var(--glass-border); display:flex; align-items:center;
-    justify-content:space-between; padding:0 28px; background:var(--glass);
-    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); position:sticky; top:0; z-index:40;
-  }
-  .topbar h2{ font-size:19px; font-weight:600; margin:0; }
-  .view-scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-  .page{ max-width:640px; margin:0 auto; padding:26px 24px 80px; }
-  .page.wide{ max-width:920px; }
-
-  .toast-wrap{ position:fixed; top:18px; right:18px; z-index:200; display:flex; flex-direction:column; gap:10px; max-width:calc(100vw - 36px); }
-  .toast{
-    background:var(--glass-strong); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-    border:1px solid var(--glass-border); border-left:3px solid var(--amber); padding:12px 16px;
-    color:var(--paper); border-radius:10px; box-shadow:var(--shadow); font-size:13.5px; max-width:280px; animation:slideIn .25s ease;
-  }
-  @keyframes slideIn{ from{ opacity:0; transform:translateX(14px);} to{ opacity:1; transform:translateX(0);} }
+  #view-chat.page, #view-groups.page{ height:calc(100vh - 56px - 64px) !important; padding-bottom:0; max-width:none; }
 
   /* ---------------- composer / feed ---------------- */
   .composer{
     background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-    border:1px solid var(--glass-border); border-radius:16px; padding:16px; margin-bottom:22px;
+    border:1px solid var(--glass-border); border-radius:16px; padding:14px; margin-bottom:20px;
     box-shadow:var(--shadow); position:relative;
   }
   .composer textarea{ border:none; background:none; padding:6px 2px; font-size:16px; min-height:56px; }
   .composer-imgprev{ position:relative; margin:6px 2px 4px; display:none; }
-  .composer-imgprev img{ max-height:220px; max-width:100%; border-radius:10px; display:block; }
+  .composer-imgprev img, .composer-imgprev video{ max-height:220px; max-width:100%; border-radius:10px; display:block; }
   .composer-imgprev .rm{ position:absolute; top:8px; right:8px; background:rgba(0,0,0,.6); border:none; color:#fff; width:26px; height:26px; border-radius:50%; cursor:pointer; }
   .composer-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:8px; gap:10px; }
 
+  /* fixed-size post card: square media, consistent layout */
   .post{
     background:var(--glass); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-    border:1px solid var(--glass-border); border-radius:16px; padding:18px; margin-bottom:16px;
-    box-shadow:var(--shadow); position:relative;
+    border:1px solid var(--glass-border); border-radius:14px; margin-bottom:16px;
+    box-shadow:var(--shadow); position:relative; overflow:hidden;
   }
-  .post-head{ display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; }
+  .post-head{ display:flex; align-items:flex-start; gap:12px; padding:14px 15px 8px; }
   .post-head .who{ flex:1; min-width:0; }
   .post-head .name{ font-weight:600; font-size:14.5px; }
   .post-head .meta{ font-size:12.5px; color:var(--paper-faint); margin-top:1px; }
-  .post-content{ font-size:15px; line-height:1.55; white-space:pre-wrap; margin-bottom:10px; overflow-wrap:anywhere; }
-  .post img.post-image{ width:100%; border-radius:10px; margin-bottom:10px; display:block; }
-  .post-actions{ display:flex; gap:6px; border-top:1px solid var(--line-soft); padding-top:10px; }
+  .post-content{ font-size:15px; line-height:1.55; white-space:pre-wrap; padding:0 15px 10px; overflow-wrap:anywhere; }
+  .post-media{ width:100%; aspect-ratio:1/1; background:#0c0d12; position:relative; overflow:hidden; }
+  .post-media img.post-image{ width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
+  .post-media video.post-video{ width:100%; height:100%; object-fit:cover; display:block; background:#000; }
+  .post-actions{ display:flex; gap:2px; border-top:1px solid var(--line-soft); padding:6px 6px; }
   .action-btn{
-    flex:1; background:none; border:none; color:var(--paper-dim); padding:8px; border-radius:8px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; gap:7px; font-size:13.5px; font-weight:600;
+    flex:1; background:none; border:none; color:var(--paper-dim); padding:8px 4px; border-radius:8px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px; font-size:12.5px; font-weight:600;
   }
   .action-btn:hover{ background:var(--ink-700); color:var(--paper); }
   .action-btn.liked{ color:var(--rose); }
   .action-btn svg{ width:17px; height:17px; flex-shrink:0; }
-  .post-del{ position:absolute; top:14px; right:14px; background:none; border:none; color:var(--paper-faint); cursor:pointer; padding:6px; }
+  .post-del{ position:absolute; top:14px; right:14px; background:rgba(0,0,0,.35); border:none; color:#fff; cursor:pointer; padding:6px; border-radius:50%; z-index:2; }
   .post-del:hover{ color:var(--rose); }
-  .comments{ margin-top:10px; padding-top:10px; border-top:1px solid var(--line-soft); display:none; }
+  .comments{ margin:0 15px 10px; padding-top:10px; border-top:1px solid var(--line-soft); display:none; }
   .comment{ display:flex; gap:9px; margin-bottom:9px; font-size:13.5px; }
   .comment b{ font-weight:600; }
   .comment-form{ display:flex; gap:8px; margin-top:6px; }
@@ -217,61 +242,111 @@
   .empty{ text-align:center; padding:60px 20px; color:var(--paper-faint); }
   .empty .serif{ font-size:20px; color:var(--paper-dim); margin-bottom:6px; }
 
+  /* ---------------- image/video zoom lightbox ---------------- */
+  .lightbox-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.94); z-index:400; display:flex;
+    align-items:center; justify-content:center; touch-action:none; overflow:hidden;
+  }
+  .lightbox-overlay img{ max-width:100%; max-height:100%; touch-action:none; transition:transform .08s linear; will-change:transform; }
+  .lightbox-close{ position:absolute; top:calc(14px + env(safe-area-inset-top)); right:14px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.14); border:none; color:#fff; font-size:18px; z-index:2; }
+  .lightbox-controls{ position:absolute; bottom:calc(18px + env(safe-area-inset-bottom)); left:0; right:0; display:flex; justify-content:center; gap:10px; z-index:2; }
+  .lightbox-controls button{ width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.14); border:none; color:#fff; font-size:20px; }
+  .lightbox-hint{ position:absolute; top:calc(14px + env(safe-area-inset-top)); left:14px; color:rgba(255,255,255,.6); font-size:12px; }
+
+  /* ---------------- share sheet ---------------- */
+  .share-sheet-list{ max-height:280px; overflow-y:auto; margin:8px 0; }
+  .share-sheet-row{ display:flex; align-items:center; gap:10px; padding:9px 4px; cursor:pointer; border-bottom:1px solid var(--line-soft); }
+  .share-sheet-row:last-child{ border-bottom:none; }
+  .share-sheet-row .name{ font-size:14px; font-weight:600; }
+
   /* ---------------- search ---------------- */
-  .search-box{ position:relative; margin-bottom:20px; }
+  .search-box{ position:relative; margin-bottom:4px; }
   .search-box svg{ position:absolute; left:14px; top:50%; transform:translateY(-50%); width:17px; height:17px; color:var(--paper-faint); }
   .search-box input{ padding-left:40px; font-size:16px; }
-  .user-row{ display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line-soft); }
+  .search-suggestions{
+    position:relative; background:var(--glass-strong); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border:1px solid var(--glass-border); border-radius:12px; margin-top:8px; overflow:hidden; box-shadow:var(--shadow);
+  }
+  .user-row{ display:flex; align-items:center; gap:12px; padding:12px 10px; border-bottom:1px solid var(--line-soft); }
+  .user-row:last-child{ border-bottom:none; }
   .user-row .who{ flex:1; min-width:0; cursor:pointer; }
   .user-row .name{ font-weight:600; font-size:14.5px; }
+  .user-row .name mark{ background:var(--amber-soft); color:var(--amber); border-radius:3px; }
   .user-row .handle{ font-size:12.5px; color:var(--paper-faint); }
 
   /* ---------------- profile ---------------- */
-  .profile-head{ display:flex; gap:20px; align-items:flex-start; margin-bottom:6px; }
-  .profile-name{ font-size:24px; font-weight:600; margin:0 0 2px; }
+  .profile-head{ display:flex; gap:18px; align-items:flex-start; margin-bottom:6px; }
+  .profile-name{ font-size:22px; font-weight:600; margin:0 0 2px; }
   .profile-handle{ color:var(--amber); font-size:14px; margin:0 0 10px; }
-  .profile-bio{ font-size:14.5px; color:var(--paper-dim); line-height:1.5; margin:0 0 14px; max-width:440px; }
-  .stat-row{ display:flex; gap:22px; margin-bottom:16px; }
+  .profile-bio{ font-size:14.5px; color:var(--paper-dim); line-height:1.5; margin:0 0 14px; }
+  .stat-row{ display:flex; gap:20px; margin-bottom:16px; }
+  .stat{ cursor:pointer; }
   .stat b{ font-size:16px; }
   .stat span{ display:block; font-size:12px; color:var(--paper-faint); }
-  .profile-actions{ display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap; }
-  .tab-line{ border-bottom:1px solid var(--line-soft); margin-bottom:18px; }
+  .profile-actions{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .profile-actions .btn{ flex:1; min-width:0; text-align:center; }
+  .tab-line{ display:flex; border-bottom:1px solid var(--line-soft); margin-bottom:4px; }
+  .profile-tab{ flex:1; text-align:center; padding:10px 0; background:none; border:none; color:var(--paper-faint); font-weight:600; font-size:13px; border-bottom:2px solid transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .profile-tab.active{ color:var(--paper); border-bottom-color:var(--amber); }
+  .media-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:2px; margin-top:4px; }
+  .media-grid .cell{ aspect-ratio:1/1; background:var(--ink-700); position:relative; overflow:hidden; cursor:pointer; }
+  .media-grid .cell img, .media-grid .cell video{ width:100%; height:100%; object-fit:cover; }
+  .media-grid .cell .kind{ position:absolute; top:5px; right:5px; color:#fff; filter:drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+  .media-grid .cell .kind svg{ width:15px; height:15px; }
 
   /* ---------------- chat ---------------- */
-  .split{ display:flex; height:100%; }
-  .conv-list{ width:300px; flex-shrink:0; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-right:1px solid var(--glass-border); overflow-y:auto; -webkit-overflow-scrolling:touch; }
-  .conv-item{ display:flex; gap:11px; align-items:center; padding:13px 18px; cursor:pointer; border-bottom:1px solid var(--line-soft); }
+  .split{ display:flex; height:100%; position:relative; overflow:hidden; }
+  .conv-list{ width:100%; position:absolute; inset:0; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); overflow-y:auto; -webkit-overflow-scrolling:touch; transition:transform .22s ease; z-index:2; }
+  .conv-item{ display:flex; gap:11px; align-items:center; padding:13px 16px; cursor:pointer; border-bottom:1px solid var(--line-soft); }
   .conv-item:hover, .conv-item.active{ background:var(--ink-800); }
   .conv-item .who{ flex:1; min-width:0; }
   .conv-item .name{ font-size:14px; font-weight:600; }
   .conv-item .last{ font-size:12.5px; color:var(--paper-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px; }
   .conv-unread{ background:var(--amber); color:#fff; font-size:11px; font-weight:700; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
 
-  .chat-pane{ flex:1; display:flex; flex-direction:column; min-width:0; }
-  .chat-head{ height:64px; flex-shrink:0; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:12px; padding:0 20px; }
+  .chat-pane{ width:100%; position:absolute; inset:0; transition:transform .22s ease; z-index:1; transform:translateX(100%); display:flex; flex-direction:column; }
+  .conv-list.chat-open{ transform:translateX(-100%); }
+  .chat-pane.chat-open{ transform:translateX(0); }
+  .chat-head{ height:58px; flex-shrink:0; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:10px; padding:0 12px; }
   .chat-head .who{ flex:1; min-width:0; }
   .chat-head .name{ font-weight:600; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .chat-head .status{ font-size:12px; color:var(--paper-faint); }
-  .chat-back-btn{ display:none; }
-  .chat-body{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:20px; display:flex; flex-direction:column; gap:4px; }
+  .chat-back-btn{ display:flex; width:34px; height:34px; border-radius:9px; border:none; background:none; color:var(--paper); align-items:center; justify-content:center; flex-shrink:0; margin-right:2px; }
+  .chat-body{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px; display:flex; flex-direction:column; gap:4px; }
   .bubble-row{ display:flex; margin-bottom:6px; }
   .bubble-row.me{ justify-content:flex-end; }
-  .bubble{ max-width:62%; padding:10px 14px; border-radius:16px; font-size:14.5px; line-height:1.45; overflow-wrap:anywhere; }
+  .bubble{ max-width:80%; padding:10px 14px; border-radius:16px; font-size:14.5px; line-height:1.45; overflow-wrap:anywhere; }
   .bubble-row.me .bubble{ background:var(--ig-gradient); color:#fff; border-bottom-right-radius:4px; }
   .bubble-row.them .bubble{ background:var(--ink-700); color:var(--paper); border-bottom-left-radius:4px; }
+  .bubble.media-bubble{ padding:4px; background:none !important; }
+  .bubble.media-bubble img, .bubble.media-bubble video{ max-width:220px; max-height:280px; border-radius:14px; display:block; cursor:zoom-in; }
+  .bubble.shared-post{ padding:0; overflow:hidden; border-radius:14px; width:200px; background:var(--ink-800) !important; color:var(--paper) !important; border:1px solid var(--line); }
+  .bubble.shared-post .sp-media{ width:100%; aspect-ratio:1/1; background:#0c0d12; }
+  .bubble.shared-post .sp-media img, .bubble.shared-post .sp-media video{ width:100%; height:100%; object-fit:cover; }
+  .bubble.shared-post .sp-body{ padding:8px 10px; font-size:12.5px; }
   .bubble-time{ font-size:10.5px; color:var(--paper-faint); margin-top:3px; padding:0 4px; }
-  .typing-indicator{ font-size:12.5px; color:var(--paper-faint); padding:0 20px 8px; font-style:italic; height:16px; flex-shrink:0; }
-  .chat-input-row{ padding:16px 20px; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-top:1px solid var(--glass-border); display:flex; gap:10px; flex-shrink:0; }
-  .chat-input-row input{ border-radius:22px; padding:11px 18px; font-size:16px; }
+  .typing-indicator{ font-size:12.5px; color:var(--paper-faint); padding:0 14px 6px; font-style:italic; height:16px; flex-shrink:0; }
+  .chat-input-row{ padding:10px 12px; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-top:1px solid var(--glass-border); display:flex; gap:8px; flex-shrink:0; align-items:center; }
+  .chat-input-row input[type=text]{ border-radius:22px; padding:11px 16px; font-size:16px; }
+  .chat-attach-btn{ width:38px; height:38px; border-radius:50%; border:none; background:var(--ink-700); color:var(--paper-dim); display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
   .empty-chat{ flex:1; display:flex; align-items:center; justify-content:center; color:var(--paper-faint); padding:20px; text-align:center; }
+  .chat-media-preview{ padding:8px 12px 0; display:none; position:relative; }
+  .chat-media-preview img, .chat-media-preview video{ max-height:140px; border-radius:10px; }
+  .chat-media-preview .rm{ position:absolute; top:2px; left:118px; background:rgba(0,0,0,.6); border:none; color:#fff; width:24px; height:24px; border-radius:50%; }
 
   /* ---------------- groups ---------------- */
-  .group-list-item{ display:flex; align-items:center; gap:12px; padding:13px 18px; cursor:pointer; border-bottom:1px solid var(--line-soft); }
+  .group-list-item{ display:flex; align-items:center; gap:12px; padding:13px 16px; cursor:pointer; border-bottom:1px solid var(--line-soft); }
   .group-list-item:hover, .group-list-item.active{ background:var(--ink-800); }
-  .group-avatar{ width:42px; height:42px; border-radius:12px; background:var(--amber-soft); color:var(--amber); display:flex; align-items:center; justify-content:center; font-family:'Inter',sans-serif; font-weight:600; flex-shrink:0; }
+  .group-avatar{ width:42px; height:42px; border-radius:12px; background:var(--amber-soft); color:var(--amber); display:flex; align-items:center; justify-content:center; font-family:'Inter',sans-serif; font-weight:600; flex-shrink:0; overflow:hidden; }
+  .group-avatar img{ width:100%; height:100%; object-fit:cover; }
   .member-pick{ max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; margin-top:8px; }
   .member-pick label{ display:flex; align-items:center; gap:10px; padding:9px 12px; font-size:14px; cursor:pointer; border-bottom:1px solid var(--line-soft); text-transform:none; font-weight:400; color:var(--paper); }
   .member-pick label:last-child{ border-bottom:none; }
+  .member-manage-row{ display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--line-soft); }
+  .member-manage-row:last-child{ border-bottom:none; }
+  .member-manage-row .who{ flex:1; min-width:0; }
+  .member-manage-row .name{ font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px; }
+  .admin-badge{ font-size:10px; font-weight:700; color:var(--amber); background:var(--amber-soft); padding:2px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:.03em; }
 
   /* ---------------- settings ---------------- */
   .settings-section{ margin-bottom:26px; }
@@ -280,7 +355,9 @@
   .setting-row:last-child{ border-bottom:none; }
   .setting-row .label{ font-size:14.5px; font-weight:500; }
   .setting-row .desc{ font-size:12.5px; color:var(--paper-faint); margin-top:2px; }
-  .setting-row select{ width:auto; min-width:150px; }
+  .setting-row select{ width:auto; min-width:130px; }
+  .setting-row.link{ cursor:pointer; }
+  .setting-row.link:hover{ background:var(--ink-800); }
   .switch{ position:relative; width:44px; height:25px; flex-shrink:0; }
   .switch input{ opacity:0; width:0; height:0; position:absolute; }
   .switch .track{ position:absolute; inset:0; background:var(--ink-700); border:1px solid var(--line); border-radius:14px; cursor:pointer; transition:.15s; }
@@ -291,139 +368,44 @@
   /* ---------------- modal ---------------- */
   .modal-overlay{
     position:fixed; inset:0; background:rgba(10,11,17,.7); backdrop-filter:blur(3px); z-index:150;
-    display:flex; align-items:center; justify-content:center; padding:20px;
+    display:flex; align-items:flex-end; justify-content:center; padding:0;
   }
   .modal{
     background:var(--glass-strong); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px);
-    border:1px solid var(--glass-border); border-radius:20px; padding:26px;
-    width:100%; max-width:420px; box-shadow:var(--shadow); max-height:86vh; overflow-y:auto;
+    border:1px solid var(--glass-border); border-radius:18px 18px 0 0; padding:22px;
+    width:100%; max-width:480px; box-shadow:var(--shadow); max-height:86vh; overflow-y:auto;
   }
   .modal h3{ margin:0 0 16px; font-size:19px; font-weight:600; }
-  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:20px; flex-wrap:wrap-reverse; }
+  .modal-actions .btn{ flex:1; }
   .avatar-pick{ display:flex; align-items:center; gap:16px; margin-bottom:16px; }
 
   /* ---------------- calls ---------------- */
   .call-overlay{
-    position:fixed; inset:0; background:rgba(8,9,14,.92); z-index:300; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:20px; color:var(--paper); padding:20px;
+    position:fixed; inset:0; background:rgba(8,9,14,.96); z-index:300; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; color:var(--paper); padding:20px;
   }
   .call-overlay video{ background:#000; border-radius:14px; }
-  #remoteVideo{ width:min(720px,88vw); max-height:60vh; }
-  #localVideo{ width:150px; position:fixed; bottom:120px; right:26px; border:2px solid var(--line); border-radius:10px; }
-  .call-title{ font-family:'Inter',sans-serif; font-size:22px; text-align:center; }
+  #remoteVideo{ width:min(720px,92vw); max-height:56vh; }
+  #localVideo{ width:96px; position:fixed; bottom:150px; right:16px; border:2px solid var(--line); border-radius:10px; }
+  .call-title{ font-family:'Inter',sans-serif; font-size:20px; text-align:center; }
   .call-sub{ color:var(--paper-dim); font-size:14px; }
-  .call-controls{ display:flex; gap:16px; }
-  .call-controls .btn-icon{ width:56px; height:56px; border-radius:50%; }
+  .call-timer{ font-family:'IBM Plex Mono',monospace; font-size:15px; color:var(--paper-dim); letter-spacing:.03em; }
+  .call-controls{ display:flex; gap:14px; }
+  .call-controls .btn-icon{ width:54px; height:54px; border-radius:50%; }
+  .call-controls .btn-icon.active-toggle{ background:#fff; color:#111; }
 
   /* ==================================================================
-     RESPONSIVE / MOBILE
-     Bottom tab bar replaces the side rail; single-pane navigation for
-     chat & groups; larger tap targets; safe-area padding.
+     RESPONSIVE — this app targets mobile viewports only. On wide
+     screens it's shown inside a centered phone frame (see #phoneFrame).
      ================================================================== */
-  @media (max-width: 860px){
-    .conv-list{ width:230px; }
-  }
-
-  @media (max-width: 640px){
-    body{ overflow-x:hidden; }
-
-    /* --- auth --- */
-    .auth-card{ padding:30px 22px 26px; border-radius:16px; }
-    .auth-card h1{ font-size:23px; }
-
-    /* --- app shell: rail becomes a bottom tab bar --- */
-    #appView.active{ flex-direction:column; }
-    .rail{
-      position:fixed; bottom:0; left:0; right:0; top:auto; height:auto; width:100%;
-      flex-direction:row; justify-content:space-around; align-items:center;
-      padding:8px 6px calc(8px + env(safe-area-inset-bottom));
-      border-right:none; border-top:1px solid var(--line-soft);
-      z-index:120; gap:0;
-    }
-    .rail .brand-mark{ display:none; }
-    .rail-btn{ width:auto; min-width:44px; height:44px; flex:1; }
-    .rail-spacer{ display:none; }
-    .rail-self{ order:99; margin-bottom:0; }
-    .rail-self .avatar{ width:28px; height:28px; font-size:12px; }
-
-    .main{ height:100vh; }
-    .topbar{ height:56px; padding:0 16px; }
-    .topbar h2{ font-size:17px; }
-    .view-scroll{ padding-bottom:70px; }
-    .page{ padding:18px 16px 24px; }
-
-    /* leave room above the bottom tab bar */
-    #view-chat.page, #view-groups.page{ height:calc(100vh - 56px - 64px) !important; padding-bottom:0; }
-
-    .toast-wrap{ top:auto; bottom:calc(72px + env(safe-area-inset-bottom)); right:12px; left:12px; align-items:stretch; }
-    .toast{ max-width:none; }
-
-    /* --- composer --- */
-    .composer{ padding:14px; }
-    .composer textarea{ font-size:16px; }
-
-    /* --- posts --- */
-    .post{ padding:15px; border-radius:12px; }
-    .post-actions{ gap:2px; }
-    .action-btn{ font-size:12.5px; padding:8px 4px; gap:5px; }
-    .post-del{ top:12px; right:12px; }
-
-    /* --- profile --- */
-    .profile-head{ gap:14px; }
-    .avatar.lg{ width:72px; height:72px; font-size:24px; }
-    .profile-name{ font-size:21px; }
-    .stat-row{ gap:16px; }
-    .profile-actions{ gap:8px; }
-    .profile-actions .btn{ flex:1; min-width:0; text-align:center; }
-
-    /* --- chat: single pane, list <-> conversation --- */
-    .split{ position:relative; overflow:hidden; height:100%; }
-    .conv-list, #groupList{
-      width:100%; position:absolute; inset:0; transition:transform .22s ease; z-index:2;
-    }
-    .chat-pane, #groupPane{
-      width:100%; position:absolute; inset:0; transition:transform .22s ease; z-index:1;
-      transform:translateX(100%);
-    }
-    .conv-list.chat-open, #groupList.chat-open{ transform:translateX(-100%); }
-    .chat-pane.chat-open, #groupPane.chat-open{ transform:translateX(0); }
-
-    .chat-back-btn{
-      display:flex; width:34px; height:34px; border-radius:9px; border:none; background:none;
-      color:var(--paper); align-items:center; justify-content:center; flex-shrink:0; margin-right:2px;
-    }
-    .chat-head{ padding:0 12px; gap:10px; }
-    .chat-body{ padding:14px; }
-    .bubble{ max-width:80%; }
-    .chat-input-row{ padding:12px; }
-
-    /* --- calls --- */
-    #localVideo{ width:96px; bottom:100px; right:14px; }
-    .call-controls .btn-icon{ width:52px; height:52px; }
-    .call-title{ font-size:19px; }
-
-    /* --- modal --- */
-    .modal{ padding:20px; max-width:none; width:100%; border-radius:14px 14px 0 0; align-self:flex-end; }
-    .modal-overlay{ align-items:flex-end; padding:0; }
-    .modal-actions{ flex-wrap:wrap-reverse; }
-    .modal-actions .btn{ flex:1; }
-
-    /* --- settings --- */
-    .setting-row{ gap:12px; }
-    .setting-row select{ min-width:120px; }
-  }
-
-  @media (max-width: 380px){
-    .rail-btn svg{ width:19px; height:19px; }
-    .avatar.sm{ width:30px; height:30px; font-size:12px; }
-  }
-
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
   }
 </style>
 </head>
 <body>
+<div id="phoneFrame">
 
 <!-- ================= AUTH ================= -->
 <div id="authView">
@@ -460,28 +442,6 @@
 
 <!-- ================= APP SHELL ================= -->
 <div id="appView">
-  <nav class="rail">
-    <div class="brand-mark" style="background:var(--ig-gradient);color:#fff;">✒</div>
-    <button class="rail-btn active" data-view="feed" title="Feed">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
-    </button>
-    <button class="rail-btn" data-view="search" title="Search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-    </button>
-    <button class="rail-btn" data-view="chat" title="Chat">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-      <span class="badge hidden" id="chatBadge">0</span>
-    </button>
-    <button class="rail-btn" data-view="groups" title="Groups">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    </button>
-    <div class="rail-spacer"></div>
-    <button class="rail-btn" data-view="settings" title="Settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-    </button>
-    <div class="avatar sm rail-self" id="railAvatar" data-view="profile-self" title="Your profile"></div>
-  </nav>
-
   <div class="main">
     <div class="topbar">
       <h2 id="topbarTitle">Your Feed</h2>
@@ -495,11 +455,16 @@
       <section id="view-feed" class="page">
         <div class="composer">
           <textarea id="postText" placeholder="What happened today?" rows="2"></textarea>
-          <div class="composer-imgprev" id="composerImgPrev"><img id="composerImg"><button class="rm" id="composerImgRm">✕</button></div>
+          <div class="composer-imgprev" id="composerImgPrev"></div>
           <div class="composer-foot">
-            <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
-              📷 Photo<input type="file" accept="image/*" id="composerFile" class="hidden">
-            </label>
+            <div class="row gap-8">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+                📷 Photo<input type="file" accept="image/*" id="composerFile" class="hidden">
+              </label>
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+                🎬 Video<input type="file" accept="video/*" id="composerVideoFile" class="hidden">
+              </label>
+            </div>
             <button class="btn btn-primary btn-sm" id="postSubmitBtn">Post entry</button>
           </div>
         </div>
@@ -510,9 +475,9 @@
       <section id="view-search" class="page hidden">
         <div class="search-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="searchInput" placeholder="Search by @username or name…">
+          <input type="text" id="searchInput" placeholder="Search by @username or name…" autocomplete="off">
         </div>
-        <div id="searchResults"></div>
+        <div id="searchResults" class="search-suggestions hidden"></div>
       </section>
 
       <!-- PROFILE -->
@@ -534,7 +499,7 @@
       <section id="view-groups" class="page hidden" style="max-width:none;padding:0;height:calc(100vh - 64px);">
         <div class="split">
           <div class="conv-list" id="groupList">
-            <div style="padding:14px 18px;">
+            <div style="padding:14px 16px;">
               <button class="btn btn-primary btn-sm" style="width:100%;" id="newGroupBtn">+ New group</button>
             </div>
           </div>
@@ -557,8 +522,20 @@
             <label class="switch"><input type="checkbox" data-setting="showOnlineStatus"><span class="track"></span></label>
           </div>
           <div class="setting-row">
+            <div><div class="label">Show activity status</div><div class="desc">Let others see when you were last active</div></div>
+            <label class="switch"><input type="checkbox" data-setting="showActivityStatus"><span class="track"></span></label>
+          </div>
+          <div class="setting-row">
             <div><div class="label">Read receipts</div><div class="desc">Show when you've seen a message</div></div>
             <label class="switch"><input type="checkbox" data-setting="readReceipts"><span class="track"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="label">Hide like counts</div><div class="desc">Only you see how many likes your entries get</div></div>
+            <label class="switch"><input type="checkbox" data-setting="hideLikeCounts"><span class="track"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="label">Allow sharing of my posts</div><div class="desc">Let others share your entries to their own chats</div></div>
+            <label class="switch"><input type="checkbox" data-setting="allowSharingOfMyPosts"><span class="track"></span></label>
           </div>
           <div class="setting-row">
             <div><div class="label">Who can message you</div></div>
@@ -567,6 +544,10 @@
               <option value="followers">Followers only</option>
               <option value="nobody">Nobody</option>
             </select>
+          </div>
+          <div class="setting-row link" id="blockedAccountsRow">
+            <div><div class="label">Blocked accounts</div><div class="desc">Manage people you've blocked</div></div>
+            <span class="faint">›</span>
           </div>
         </div>
         <div class="settings-section">
@@ -591,6 +572,10 @@
             <label class="switch"><input type="checkbox" data-setting="autoplayVideos"><span class="track"></span></label>
           </div>
           <div class="setting-row">
+            <div><div class="label">Data saver</div><div class="desc">Reduce media quality on slow connections</div></div>
+            <label class="switch"><input type="checkbox" data-setting="dataSaver"><span class="track"></span></label>
+          </div>
+          <div class="setting-row">
             <div><div class="label">Language</div></div>
             <select data-setting="language">
               <option value="en">English</option>
@@ -611,9 +596,31 @@
 
     </div>
   </div>
+
+  <nav class="rail">
+    <button class="rail-btn active" data-view="feed" title="Feed">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
+    </button>
+    <button class="rail-btn" data-view="search" title="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    </button>
+    <button class="rail-btn" data-view="chat" title="Chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <span class="badge hidden" id="chatBadge">0</span>
+    </button>
+    <button class="rail-btn" data-view="groups" title="Groups">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </button>
+    <button class="rail-btn" data-view="settings" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+    <div class="avatar sm rail-self" id="railAvatar" data-view="profile-self" title="Your profile"></div>
+  </nav>
 </div>
 
 <div class="toast-wrap" id="toastWrap"></div>
+
+</div><!-- /#phoneFrame -->
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -630,10 +637,17 @@ const state = {
   peerConnection: null,
   localStream: null,
   callPeerId: null,
+  callKind: null,
+  callMuted: false,
+  callVideoOn: true,
+  callStartedAt: null,
+  callTimerInterval: null,
   onlineUserIds: new Set(),
+  chatMediaData: null,
+  chatMediaType: null,
+  groupMediaData: null,
+  groupMediaType: null,
 };
-
-const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
 
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
@@ -669,6 +683,13 @@ function timeShort(iso) {
 function escapeHTML(str) {
   const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML;
 }
+function highlightMatch(text, term) {
+  if (!term) return escapeHTML(text);
+  const safe = escapeHTML(text);
+  const idx = safe.toLowerCase().indexOf(term.toLowerCase());
+  if (idx === -1) return safe;
+  return safe.slice(0, idx) + '<mark>' + safe.slice(idx, idx + term.length) + '</mark>' + safe.slice(idx + term.length);
+}
 function toast(msg) {
   const el = document.createElement('div');
   el.className = 'toast';
@@ -683,6 +704,14 @@ function fileToBase64(file) {
     r.onerror = reject;
     r.readAsDataURL(file);
   });
+}
+function downloadDataUrl(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 /* ==================================================================
@@ -761,10 +790,7 @@ function showView(view, opts = {}) {
   if (view === 'settings') loadSettings();
 }
 
-/* Mobile single-pane helpers for chat/groups: show the list, hide the
-   conversation pane, when navigating into the section fresh. */
 function closeMobilePane(kind) {
-  if (!isMobile()) return;
   if (kind === 'chat') {
     document.getElementById('convList').classList.remove('chat-open');
     document.getElementById('chatPane').classList.remove('chat-open');
@@ -774,7 +800,6 @@ function closeMobilePane(kind) {
   }
 }
 function openMobilePane(kind) {
-  if (!isMobile()) return;
   if (kind === 'chat') {
     document.getElementById('convList').classList.add('chat-open');
     document.getElementById('chatPane').classList.add('chat-open');
@@ -788,28 +813,44 @@ function openMobilePane(kind) {
    FEED
    ================================================================== */
 const composerFile = document.getElementById('composerFile');
+const composerVideoFile = document.getElementById('composerVideoFile');
 let composerImageData = null;
+let composerMediaType = null;
+
+function setComposerMedia(dataUrl, kind) {
+  composerImageData = dataUrl;
+  composerMediaType = kind;
+  const prev = document.getElementById('composerImgPrev');
+  prev.style.display = 'block';
+  prev.innerHTML = (kind === 'video'
+    ? `<video src="${dataUrl}" controls></video>`
+    : `<img src="${dataUrl}">`) + `<button class="rm" id="composerImgRm">✕</button>`;
+  document.getElementById('composerImgRm').addEventListener('click', clearComposerMedia);
+}
+function clearComposerMedia() {
+  composerImageData = null; composerMediaType = null;
+  composerFile.value = ''; composerVideoFile.value = '';
+  const prev = document.getElementById('composerImgPrev');
+  prev.style.display = 'none'; prev.innerHTML = '';
+}
 composerFile.addEventListener('change', async () => {
   if (!composerFile.files[0]) return;
-  composerImageData = await fileToBase64(composerFile.files[0]);
-  document.getElementById('composerImg').src = composerImageData;
-  document.getElementById('composerImgPrev').style.display = 'block';
+  setComposerMedia(await fileToBase64(composerFile.files[0]), 'image');
 });
-document.getElementById('composerImgRm').addEventListener('click', () => {
-  composerImageData = null; composerFile.value = '';
-  document.getElementById('composerImgPrev').style.display = 'none';
+composerVideoFile.addEventListener('change', async () => {
+  if (!composerVideoFile.files[0]) return;
+  setComposerMedia(await fileToBase64(composerVideoFile.files[0]), 'video');
 });
 
 document.getElementById('postSubmitBtn').addEventListener('click', async () => {
   const text = document.getElementById('postText').value.trim();
-  if (!text && !composerImageData) return toast('Write something or add a photo first.');
+  if (!text && !composerImageData) return toast('Write something or add media first.');
   const btn = document.getElementById('postSubmitBtn');
   btn.disabled = true;
   try {
-    await api('/posts', { method: 'POST', body: { content: text, image: composerImageData } });
+    await api('/posts', { method: 'POST', body: { content: text, image: composerImageData, mediaType: composerMediaType } });
     document.getElementById('postText').value = '';
-    composerImageData = null; composerFile.value = '';
-    document.getElementById('composerImgPrev').style.display = 'none';
+    clearComposerMedia();
     loadFeed();
   } catch (err) { toast(err.message); }
   btn.disabled = false;
@@ -834,8 +875,14 @@ function renderPosts(container, posts) {
 
 function postHTML(p) {
   const mine = p.author.id === state.me.id;
+  let media = '';
+  if (p.image && p.mediaType === 'video') {
+    media = `<div class="post-media"><video class="post-video" src="${p.image}" controls playsinline ${state.me?.settings?.autoplayVideos === false ? '' : 'muted'} data-open-zoom="${p.id}" data-zoom-kind="video"></video></div>`;
+  } else if (p.image) {
+    media = `<div class="post-media"><img class="post-image" src="${p.image}" data-open-zoom="${p.id}" data-zoom-kind="image"></div>`;
+  }
   return `
-  <article class="post" data-post-id="${p.id}">
+  <article class="post" data-post-id="${p.id}" data-post-media="${p.image ? escapeHTML(p.image).slice(0,0) : ''}">
     ${mine ? `<button class="post-del" data-del-post="${p.id}" title="Delete">✕</button>` : ''}
     <div class="post-head">
       ${avatarHTML(p.author)}
@@ -845,16 +892,19 @@ function postHTML(p) {
       </div>
     </div>
     ${p.content ? `<div class="post-content">${escapeHTML(p.content)}</div>` : ''}
-    ${p.image ? `<img class="post-image" src="${p.image}">` : ''}
+    ${media}
     <div class="post-actions">
       <button class="action-btn ${p.likedByMe ? 'liked' : ''}" data-like="${p.id}">
         <svg viewBox="0 0 24 24" fill="${p.likedByMe ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        <span data-like-count>${p.likeCount}</span>
+        <span data-like-count>${p.likeCount === null ? '' : p.likeCount}</span>
       </button>
       <button class="action-btn" data-toggle-comments="${p.id}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-4.5 7.6 8.4 8.4 0 0 1-3.8.9 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 3 11.5 8.5 8.5 0 0 1 11.5 3h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
         <span>${p.commentCount}</span>
       </button>
+      ${p.image ? `<button class="action-btn" data-download="${p.id}" title="Download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+      </button>` : ''}
       <button class="action-btn" data-share="${p.id}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 3.9M15.4 6.5L8.6 10.4"/></svg>
         <span data-share-count>${p.shareCount}</span>
@@ -864,13 +914,22 @@ function postHTML(p) {
   </article>`;
 }
 
+const postDataCache = new Map();
+
 document.getElementById('viewScroll').addEventListener('click', async (e) => {
   const likeBtn = e.target.closest('[data-like]');
   const shareBtn = e.target.closest('[data-share]');
+  const dlBtn = e.target.closest('[data-download]');
   const delBtn = e.target.closest('[data-del-post]');
   const toggleBtn = e.target.closest('[data-toggle-comments]');
   const gotoProfile = e.target.closest('[data-goto-profile]');
+  const zoomEl = e.target.closest('[data-open-zoom]');
 
+  if (zoomEl) {
+    const post = zoomEl.closest('.post');
+    const src = zoomEl.tagName === 'IMG' || zoomEl.tagName === 'VIDEO' ? zoomEl.getAttribute('src') : null;
+    return openLightbox(src, zoomEl.dataset.zoomKind);
+  }
   if (gotoProfile) return showProfile(gotoProfile.dataset.gotoProfile);
 
   if (likeBtn) {
@@ -881,13 +940,16 @@ document.getElementById('viewScroll').addEventListener('click', async (e) => {
       likeBtn.querySelector('[data-like-count]').textContent = r.likeCount;
     } catch (err) { toast(err.message); }
   }
+  if (dlBtn) {
+    const post = dlBtn.closest('.post');
+    const media = post.querySelector('img.post-image, video.post-video');
+    if (media) {
+      const ext = media.tagName === 'VIDEO' ? 'mp4' : 'jpg';
+      downloadDataUrl(media.getAttribute('src'), `day-diary-post-${dlBtn.dataset.download}.${ext}`);
+    }
+  }
   if (shareBtn) {
-    const id = shareBtn.dataset.share;
-    try {
-      const r = await api(`/posts/${id}/share`, { method: 'POST' });
-      shareBtn.querySelector('[data-share-count]').textContent = r.shareCount;
-      toast('Shared to your profile.');
-    } catch (err) { toast(err.message); }
+    openShareSheet(shareBtn.dataset.share, shareBtn);
   }
   if (delBtn) {
     if (!confirm('Delete this entry? This can\'t be undone.')) return;
@@ -931,38 +993,150 @@ document.getElementById('viewScroll').addEventListener('submit', async (e) => {
   } catch (err) { toast(err.message); }
 });
 
+/* -------- image/video zoom lightbox -------- */
+function openLightbox(src, kind) {
+  if (!src) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'lightbox-overlay';
+  overlay.innerHTML = kind === 'video'
+    ? `<video src="${src}" controls autoplay playsinline style="max-width:100%;max-height:100%;"></video>
+       <button class="lightbox-close" id="lbClose">✕</button>`
+    : `<img id="lbImg" src="${src}">
+       <button class="lightbox-close" id="lbClose">✕</button>
+       <div class="lightbox-hint">Pinch or scroll to zoom · drag to pan</div>
+       <div class="lightbox-controls">
+         <button id="lbZoomOut">−</button>
+         <button id="lbZoomReset">⟳</button>
+         <button id="lbZoomIn">+</button>
+       </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#lbClose').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+  if (kind !== 'video') {
+    const img = overlay.querySelector('#lbImg');
+    let scale = 1, panX = 0, panY = 0, startX = 0, startY = 0, dragging = false;
+    let pinchDist = null;
+    const apply = () => { img.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; };
+    const clampScale = (s) => Math.min(5, Math.max(1, s));
+    overlay.querySelector('#lbZoomIn').addEventListener('click', () => { scale = clampScale(scale + 0.5); apply(); });
+    overlay.querySelector('#lbZoomOut').addEventListener('click', () => { scale = clampScale(scale - 0.5); if (scale === 1) { panX = 0; panY = 0; } apply(); });
+    overlay.querySelector('#lbZoomReset').addEventListener('click', () => { scale = 1; panX = 0; panY = 0; apply(); });
+    img.addEventListener('wheel', (e) => { e.preventDefault(); scale = clampScale(scale - e.deltaY * 0.0015); if (scale === 1) { panX = 0; panY = 0; } apply(); }, { passive: false });
+    img.addEventListener('mousedown', (e) => { if (scale === 1) return; dragging = true; startX = e.clientX - panX; startY = e.clientY - panY; });
+    window.addEventListener('mousemove', (e) => { if (!dragging) return; panX = e.clientX - startX; panY = e.clientY - startY; apply(); });
+    window.addEventListener('mouseup', () => dragging = false);
+    img.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      } else if (e.touches.length === 1 && scale > 1) {
+        dragging = true; startX = e.touches[0].clientX - panX; startY = e.touches[0].clientY - panY;
+      }
+    }, { passive: true });
+    img.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && pinchDist) {
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        scale = clampScale(scale * (d / pinchDist)); pinchDist = d; apply();
+      } else if (e.touches.length === 1 && dragging) {
+        panX = e.touches[0].clientX - startX; panY = e.touches[0].clientY - startY; apply();
+      }
+    }, { passive: true });
+    img.addEventListener('touchend', () => { dragging = false; pinchDist = null; });
+    img.addEventListener('dblclick', () => { scale = scale === 1 ? 2.5 : 1; panX = 0; panY = 0; apply(); });
+  }
+}
+
+/* -------- share sheet: native share / copy / share directly to a user -------- */
+async function openShareSheet(postId, btnEl) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Share entry</h3>
+      <div class="row gap-10" style="margin-bottom:14px;">
+        <button class="btn grow" id="shareCopyBtn">🔗 Copy link</button>
+        ${navigator.share ? '<button class="btn grow" id="shareNativeBtn">📤 Share via…</button>' : ''}
+      </div>
+      <label class="field">Send directly to</label>
+      <input type="text" id="shareSheetSearch" placeholder="Search people…">
+      <div class="share-sheet-list" id="shareSheetList"><div class="empty" style="padding:14px;">Search for someone to send this to.</div></div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="shareSheetClose">Close</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#shareSheetClose').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#shareCopyBtn').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(`${location.origin}?post=${postId}`);
+    toast('Link copied.');
+    incrementShareCount(postId);
+  });
+  const nativeBtn = overlay.querySelector('#shareNativeBtn');
+  if (nativeBtn) nativeBtn.addEventListener('click', async () => {
+    try { await navigator.share({ title: 'Your Day Diary', url: `${location.origin}?post=${postId}` }); incrementShareCount(postId); } catch (e) {}
+  });
+  let deb;
+  overlay.querySelector('#shareSheetSearch').addEventListener('input', (e) => {
+    clearTimeout(deb);
+    const term = e.target.value.trim();
+    const list = overlay.querySelector('#shareSheetList');
+    if (!term) { list.innerHTML = '<div class="empty" style="padding:14px;">Search for someone to send this to.</div>'; return; }
+    deb = setTimeout(async () => {
+      const users = await api('/search?q=' + encodeURIComponent(term));
+      list.innerHTML = users.length ? users.map(u => `
+        <div class="share-sheet-row" data-send-to="${u.id}" data-uname="${escapeHTML(u.name)}">
+          ${avatarHTML(u, 'sm')}<span class="name">${escapeHTML(u.name)}</span>
+        </div>`).join('') : '<div class="empty" style="padding:14px;">No one found.</div>';
+    }, 250);
+  });
+  overlay.querySelector('#shareSheetList').addEventListener('click', async (e) => {
+    const row = e.target.closest('[data-send-to]');
+    if (!row) return;
+    try {
+      await api(`/posts/${postId}/share-to/${row.dataset.sendTo}`, { method: 'POST' });
+      toast(`Sent to ${row.dataset.uname}.`);
+      incrementShareCount(postId);
+      overlay.remove();
+    } catch (err) { toast(err.message); }
+  });
+}
+function incrementShareCount(postId) {
+  const el = document.querySelector(`.post[data-post-id="${postId}"] [data-share-count]`);
+  if (el) el.textContent = Number(el.textContent) + 1;
+}
+
 /* ==================================================================
-   SEARCH
+   SEARCH — live suggestions while typing
    ================================================================== */
 let searchDebounce;
-document.getElementById('searchInput').addEventListener('input', (e) => {
+const searchInputEl = document.getElementById('searchInput');
+const searchResultsEl = document.getElementById('searchResults');
+searchInputEl.addEventListener('input', (e) => {
   clearTimeout(searchDebounce);
   const term = e.target.value.trim();
-  const box = document.getElementById('searchResults');
-  if (!term) { box.innerHTML = ''; return; }
+  if (!term) { searchResultsEl.innerHTML = ''; searchResultsEl.classList.add('hidden'); return; }
   searchDebounce = setTimeout(async () => {
     try {
       const users = await api('/search?q=' + encodeURIComponent(term));
-      box.innerHTML = users.length
-        ? users.map(userRowHTML).join('')
+      searchResultsEl.classList.remove('hidden');
+      searchResultsEl.innerHTML = users.length
+        ? users.map(u => userRowHTML(u, term)).join('')
         : `<div class="empty">No one found for "${escapeHTML(term)}".</div>`;
     } catch (err) { toast(err.message); }
-  }, 280);
+  }, 180);
 });
 
-function userRowHTML(u) {
+function userRowHTML(u, term) {
   return `
   <div class="user-row">
     ${avatarHTML(u)}
     <div class="who" data-goto-profile="${u.username}">
-      <div class="name">${escapeHTML(u.name)}</div>
-      <div class="handle mono">@${escapeHTML(u.username)}</div>
+      <div class="name">${highlightMatch(u.name, term)}</div>
+      <div class="handle mono">@${highlightMatch(u.username, term)}</div>
     </div>
     <button class="btn btn-sm" data-message-user="${u.id}" data-message-username="${escapeHTML(u.username)}" data-message-name="${escapeHTML(u.name)}">Message</button>
   </div>`;
 }
 
-document.getElementById('searchResults').addEventListener('click', (e) => {
+searchResultsEl.addEventListener('click', (e) => {
   const gotoProfile = e.target.closest('[data-goto-profile]');
   const msgBtn = e.target.closest('[data-message-user]');
   if (gotoProfile) return showProfile(gotoProfile.dataset.gotoProfile);
@@ -1003,10 +1177,33 @@ async function showProfile(username) {
           <button class="btn btn-sm btn-danger" id="blockBtn" data-uid="${u.id}" data-blocked="${u.isBlocked}">${u.isBlocked ? 'Unblock' : 'Block'}</button>
         `}
       </div>
-      <div class="tab-line"></div>
+      <div class="tab-line">
+        <button class="profile-tab active" data-ptab="posts">Entries</button>
+        <button class="profile-tab" data-ptab="media">Media</button>
+      </div>
       <div id="profilePosts"></div>
+      <div id="profileMedia" class="media-grid hidden"></div>
     `;
     renderPosts(document.getElementById('profilePosts'), posts);
+    const mediaPosts = posts.filter(p => p.image);
+    const mediaGrid = document.getElementById('profileMedia');
+    mediaGrid.innerHTML = mediaPosts.length ? mediaPosts.map(p => `
+      <div class="cell" data-open-zoom="${p.id}" data-zoom-kind="${p.mediaType}">
+        ${p.mediaType === 'video'
+          ? `<video src="${p.image}" muted></video><span class="kind"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>`
+          : `<img src="${p.image}">`}
+      </div>`).join('') : `<div class="empty" style="grid-column:1/-1;">No photos or videos yet.</div>`;
+    box.querySelectorAll('.profile-tab').forEach(tab => tab.addEventListener('click', () => {
+      box.querySelectorAll('.profile-tab').forEach(t => t.classList.toggle('active', t === tab));
+      document.getElementById('profilePosts').classList.toggle('hidden', tab.dataset.ptab !== 'posts');
+      document.getElementById('profileMedia').classList.toggle('hidden', tab.dataset.ptab !== 'media');
+    }));
+    mediaGrid.addEventListener('click', (e) => {
+      const cell = e.target.closest('[data-open-zoom]');
+      if (!cell) return;
+      const media = cell.querySelector('img,video');
+      openLightbox(media.getAttribute('src'), cell.dataset.zoomKind);
+    });
 
     if (u.isMe) {
       document.getElementById('editProfileBtn').addEventListener('click', () => openEditProfile(u));
@@ -1086,12 +1283,20 @@ async function loadConversations() {
       return `
       <div class="conv-item ${state.activeConvUserId === c.user.id ? 'active' : ''}" data-conv-uid="${c.user.id}" data-conv-uname="${escapeHTML(c.user.username)}" data-conv-name="${escapeHTML(c.user.name)}">
         <div class="avatar-wrap">${avatarHTML(c.user)}${c.user.isOnline ? '<span class="dot online"></span>' : ''}</div>
-        <div class="who"><div class="name">${escapeHTML(c.user.name)}</div><div class="last">${c.lastMessage ? escapeHTML(c.lastMessage.text) : ''}</div></div>
+        <div class="who"><div class="name">${escapeHTML(c.user.name)}</div><div class="last">${lastMessagePreview(c.lastMessage)}</div></div>
         ${c.unread ? `<span class="conv-unread">${c.unread}</span>` : ''}
       </div>`;
     }).join('') : `<div class="empty" style="padding:40px 16px;">No messages yet. Search for someone to say hi.</div>`;
     updateChatBadge(totalUnread);
   } catch (err) { toast(err.message); }
+}
+
+function lastMessagePreview(m) {
+  if (!m) return '';
+  if (m.shared_post_id) return '📎 Shared an entry';
+  if (m.media_type === 'video') return '🎬 Video';
+  if (m.media_type === 'image') return '📷 Photo';
+  return escapeHTML(m.text);
 }
 
 function updateChatBadge(n) {
@@ -1108,6 +1313,7 @@ document.getElementById('convList').addEventListener('click', (e) => {
 
 async function openChatWith(user) {
   state.activeConvUserId = user.id;
+  state.chatMediaData = null; state.chatMediaType = null;
   document.querySelectorAll('.conv-item').forEach(el => el.classList.toggle('active', Number(el.dataset.convUid) === user.id));
   const pane = document.getElementById('chatPane');
   pane.innerHTML = `
@@ -1126,7 +1332,11 @@ async function openChatWith(user) {
     </div>
     <div class="chat-body" id="chatBody"></div>
     <div class="typing-indicator" id="typingIndicator"></div>
+    <div class="chat-media-preview" id="chatMediaPreview"></div>
     <div class="chat-input-row">
+      <label class="chat-attach-btn" title="Send photo or video">
+        📎<input type="file" accept="image/*,video/*" id="chatAttachFile" class="hidden">
+      </label>
       <input type="text" id="chatInput" placeholder="Write a message…">
       <button class="btn btn-primary btn-icon" id="chatSendBtn">➤</button>
     </div>`;
@@ -1146,12 +1356,31 @@ async function openChatWith(user) {
     loadConversations();
   } catch (err) { toast(err.message); }
 
+  const attachInput = document.getElementById('chatAttachFile');
+  const mediaPreview = document.getElementById('chatMediaPreview');
+  attachInput.addEventListener('change', async () => {
+    if (!attachInput.files[0]) return;
+    const file = attachInput.files[0];
+    state.chatMediaType = file.type.startsWith('video') ? 'video' : 'image';
+    state.chatMediaData = await fileToBase64(file);
+    mediaPreview.style.display = 'block';
+    mediaPreview.innerHTML = (state.chatMediaType === 'video'
+      ? `<video src="${state.chatMediaData}" controls></video>`
+      : `<img src="${state.chatMediaData}">`) + `<button class="rm" id="chatMediaRm">✕</button>`;
+    document.getElementById('chatMediaRm').addEventListener('click', () => {
+      state.chatMediaData = null; state.chatMediaType = null; attachInput.value = '';
+      mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
+    });
+  });
+
   const input = document.getElementById('chatInput');
   const send = () => {
     const text = input.value.trim();
-    if (!text) return;
-    state.socket.emit('dm:send', { to: user.id, text });
+    if (!text && !state.chatMediaData) return;
+    state.socket.emit('dm:send', { to: user.id, text, media: state.chatMediaData, mediaType: state.chatMediaType });
     input.value = '';
+    state.chatMediaData = null; state.chatMediaType = null; attachInput.value = '';
+    mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
   };
   document.getElementById('chatSendBtn').addEventListener('click', send);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
@@ -1164,8 +1393,26 @@ async function openChatWith(user) {
 
 function bubbleHTML(m) {
   const mine = m.sender_id === state.me.id;
+  if (m.shared_post_id && m.shared_post) {
+    const sp = m.shared_post;
+    return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble shared-post" data-goto-post="${sp.id}">
+      ${sp.image ? `<div class="sp-media">${sp.mediaType === 'video' ? `<video src="${sp.image}" muted></video>` : `<img src="${sp.image}">`}</div>` : ''}
+      <div class="sp-body"><b>${escapeHTML(sp.author.name)}</b><br>${escapeHTML((sp.content || '').slice(0, 80))}</div>
+    </div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
+  }
+  if (m.media_type && m.media_type !== 'none' && m.media) {
+    const mediaTag = m.media_type === 'video'
+      ? `<video src="${m.media}" controls data-open-zoom data-zoom-kind="video"></video>`
+      : `<img src="${m.media}" data-open-zoom data-zoom-kind="image">`;
+    return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble media-bubble">${mediaTag}${m.text ? `<div style="padding:6px 4px 0;font-size:13.5px;">${escapeHTML(m.text)}</div>` : ''}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
+  }
   return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble">${escapeHTML(m.text)}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
 }
+
+document.getElementById('chatPane').addEventListener('click', (e) => {
+  const zoomEl = e.target.closest('[data-open-zoom]');
+  if (zoomEl) openLightbox(zoomEl.getAttribute('src'), zoomEl.dataset.zoomKind);
+});
 
 /* ==================================================================
    GROUPS
@@ -1173,10 +1420,10 @@ function bubbleHTML(m) {
 async function loadGroups() {
   const list = document.getElementById('groupList');
   const groups = await api('/groups');
-  list.innerHTML = `<div style="padding:14px 18px;"><button class="btn btn-primary btn-sm" style="width:100%;" id="newGroupBtn">+ New group</button></div>` +
+  list.innerHTML = `<div style="padding:14px 16px;"><button class="btn btn-primary btn-sm" style="width:100%;" id="newGroupBtn">+ New group</button></div>` +
     (groups.length ? groups.map(g => `
       <div class="group-list-item ${state.activeGroupId === g.id ? 'active' : ''}" data-group-id="${g.id}" data-group-name="${escapeHTML(g.name)}">
-        <div class="group-avatar">${initials(g.name)}</div>
+        <div class="group-avatar">${g.photo ? `<img src="${g.photo}">` : initials(g.name)}</div>
         <div class="who"><div class="name">${escapeHTML(g.name)}</div><div class="last faint">${g.members.length} members</div></div>
       </div>`).join('') : `<div class="empty" style="padding:40px 16px;">No groups yet.</div>`);
   document.getElementById('newGroupBtn').addEventListener('click', openNewGroupModal);
@@ -1189,6 +1436,7 @@ document.getElementById('groupList').addEventListener('click', (e) => {
 
 async function openGroup(id, name) {
   state.activeGroupId = id;
+  state.groupMediaData = null; state.groupMediaType = null;
   document.querySelectorAll('.group-list-item').forEach(el => el.classList.toggle('active', Number(el.dataset.groupId) === id));
   const pane = document.getElementById('groupPane');
   pane.innerHTML = `
@@ -1196,32 +1444,74 @@ async function openGroup(id, name) {
       <button class="chat-back-btn" id="groupBackBtn" title="Back to groups">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="19" height="19"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
-      <div class="group-avatar">${initials(name)}</div><div class="who"><div class="name">${escapeHTML(name)}</div></div></div>
+      <div class="group-avatar" id="groupHeadAvatar">${initials(name)}</div>
+      <div class="who"><div class="name">${escapeHTML(name)}</div><div class="status" id="groupMemberCount"></div></div>
+      <button class="btn btn-icon" id="groupSettingsBtn" title="Group settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
     <div class="chat-body" id="groupBody"></div>
+    <div class="chat-media-preview" id="groupMediaPreview"></div>
     <div class="chat-input-row">
+      <label class="chat-attach-btn" title="Send photo or video">
+        📎<input type="file" accept="image/*,video/*" id="groupAttachFile" class="hidden">
+      </label>
       <input type="text" id="groupInput" placeholder="Message the group…">
       <button class="btn btn-primary btn-icon" id="groupSendBtn">➤</button>
     </div>`;
   const backBtn = document.getElementById('groupBackBtn');
   if (backBtn) backBtn.addEventListener('click', () => closeMobilePane('groups'));
   openMobilePane('groups');
+
+  let groupDetail;
+  try {
+    groupDetail = await api(`/groups/${id}`);
+    document.getElementById('groupMemberCount').textContent = `${groupDetail.members.length} members`;
+    if (groupDetail.photo) document.getElementById('groupHeadAvatar').innerHTML = `<img src="${groupDetail.photo}">`;
+  } catch (err) { toast(err.message); }
+  document.getElementById('groupSettingsBtn').addEventListener('click', () => openGroupSettings(groupDetail));
+
   const body = document.getElementById('groupBody');
   const msgs = await api(`/groups/${id}/messages`);
   body.innerHTML = msgs.map(m => bubbleHTML(m)).join('');
   body.scrollTop = body.scrollHeight;
+
+  const attachInput = document.getElementById('groupAttachFile');
+  const mediaPreview = document.getElementById('groupMediaPreview');
+  attachInput.addEventListener('change', async () => {
+    if (!attachInput.files[0]) return;
+    const file = attachInput.files[0];
+    state.groupMediaType = file.type.startsWith('video') ? 'video' : 'image';
+    state.groupMediaData = await fileToBase64(file);
+    mediaPreview.style.display = 'block';
+    mediaPreview.innerHTML = (state.groupMediaType === 'video'
+      ? `<video src="${state.groupMediaData}" controls></video>`
+      : `<img src="${state.groupMediaData}">`) + `<button class="rm" id="groupMediaRm">✕</button>`;
+    document.getElementById('groupMediaRm').addEventListener('click', () => {
+      state.groupMediaData = null; state.groupMediaType = null; attachInput.value = '';
+      mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
+    });
+  });
+
   const input = document.getElementById('groupInput');
   const send = () => {
     const text = input.value.trim();
-    if (!text) return;
-    state.socket.emit('group:send', { groupId: id, text });
+    if (!text && !state.groupMediaData) return;
+    state.socket.emit('group:send', { groupId: id, text, media: state.groupMediaData, mediaType: state.groupMediaType });
     input.value = '';
+    state.groupMediaData = null; state.groupMediaType = null; attachInput.value = '';
+    mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
   };
   document.getElementById('groupSendBtn').addEventListener('click', send);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
 }
 
+document.getElementById('groupPane').addEventListener('click', (e) => {
+  const zoomEl = e.target.closest('[data-open-zoom]');
+  if (zoomEl) openLightbox(zoomEl.getAttribute('src'), zoomEl.dataset.zoomKind);
+});
+
 async function openNewGroupModal() {
-  const following = await api('/search?q=' + encodeURIComponent(''));
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
@@ -1268,6 +1558,111 @@ async function openNewGroupModal() {
   });
 }
 
+/* -------- group settings: rename, photo, add/remove members (admin) -------- */
+function openGroupSettings(group) {
+  if (!group) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Group settings</h3>
+      <div class="avatar-pick">
+        <div class="group-avatar" style="width:64px;height:64px;font-size:22px;" id="gsAvatarPreview">${group.photo ? `<img src="${group.photo}">` : initials(group.name)}</div>
+        ${group.isAdmin ? `<label class="btn btn-sm" style="cursor:pointer;">Change photo<input type="file" accept="image/*" id="gsPhotoFile" class="hidden"></label>` : ''}
+      </div>
+      <div class="field-group">
+        <label class="field">Group name</label>
+        <input type="text" id="gsName" value="${escapeHTML(group.name)}" ${group.isAdmin ? '' : 'disabled'}>
+      </div>
+      ${group.isAdmin ? `<button class="btn btn-primary btn-sm" id="gsSaveBtn" style="width:100%;margin-bottom:18px;">Save changes</button>` : ''}
+      <label class="field">Members (${group.members.length})</label>
+      <div class="member-pick" id="gsMemberList"></div>
+      ${group.isAdmin ? `
+        <label class="field" style="margin-top:14px;">Add a member</label>
+        <input type="text" id="gsAddSearch" placeholder="Search people…">
+        <div class="member-pick" id="gsAddResults"></div>
+      ` : ''}
+      <div class="modal-actions"><button class="btn btn-ghost" id="gsClose">Close</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#gsClose').addEventListener('click', () => overlay.remove());
+
+  function renderMembers(g) {
+    overlay.querySelector('#gsMemberList').innerHTML = g.members.map(m => `
+      <div class="member-manage-row">
+        ${avatarHTML(m, 'sm')}
+        <div class="who"><div class="name">${escapeHTML(m.name)} ${m.isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div><div class="faint mono" style="font-size:11.5px;">@${escapeHTML(m.username)}</div></div>
+        ${g.isAdmin && m.id !== state.me.id ? `
+          ${!m.isAdmin ? `<button class="btn btn-sm" data-make-admin="${m.id}">Make admin</button>` : ''}
+          <button class="btn btn-sm btn-danger" data-remove-member="${m.id}">Remove</button>
+        ` : (m.id === state.me.id ? `<button class="btn btn-sm btn-danger" data-remove-member="${m.id}">Leave</button>` : '')}
+      </div>`).join('');
+  }
+  renderMembers(group);
+
+  overlay.querySelector('#gsMemberList').addEventListener('click', async (e) => {
+    const rm = e.target.closest('[data-remove-member]');
+    const admin = e.target.closest('[data-make-admin]');
+    try {
+      if (rm) {
+        if (!confirm(rm.dataset.removeMember == state.me.id ? 'Leave this group?' : 'Remove this member?')) return;
+        const g = await api(`/groups/${group.id}/members/${rm.dataset.removeMember}`, { method: 'DELETE' });
+        if (Number(rm.dataset.removeMember) === state.me.id) { overlay.remove(); loadGroups(); return; }
+        group = { ...group, members: g.members }; renderMembers(group); loadGroups();
+      }
+      if (admin) {
+        const g = await api(`/groups/${group.id}/admins/${admin.dataset.makeAdmin}`, { method: 'POST' });
+        group = { ...group, members: g.members }; renderMembers(group);
+      }
+    } catch (err) { toast(err.message); }
+  });
+
+  if (group.isAdmin) {
+    let newPhoto = null;
+    const photoInput = overlay.querySelector('#gsPhotoFile');
+    if (photoInput) photoInput.addEventListener('change', async (e) => {
+      if (!e.target.files[0]) return;
+      newPhoto = await fileToBase64(e.target.files[0]);
+      overlay.querySelector('#gsAvatarPreview').innerHTML = `<img src="${newPhoto}">`;
+    });
+    overlay.querySelector('#gsSaveBtn').addEventListener('click', async () => {
+      try {
+        const name = overlay.querySelector('#gsName').value.trim();
+        const g = await api(`/groups/${group.id}`, { method: 'PUT', body: { name, photo: newPhoto } });
+        toast('Group updated.');
+        loadGroups();
+        document.getElementById('groupPane') && openGroup(group.id, g.name);
+        overlay.remove();
+      } catch (err) { toast(err.message); }
+    });
+    let addDeb;
+    overlay.querySelector('#gsAddSearch').addEventListener('input', (e) => {
+      clearTimeout(addDeb);
+      const term = e.target.value.trim();
+      const list = overlay.querySelector('#gsAddResults');
+      if (!term) { list.innerHTML = ''; return; }
+      addDeb = setTimeout(async () => {
+        const users = await api('/search?q=' + encodeURIComponent(term));
+        const memberIds = new Set(group.members.map(m => m.id));
+        list.innerHTML = users.filter(u => !memberIds.has(u.id)).map(u => `
+          <div class="member-manage-row">${avatarHTML(u, 'sm')}<div class="who"><div class="name">${escapeHTML(u.name)}</div></div>
+          <button class="btn btn-sm btn-primary" data-add-member="${u.id}">Add</button></div>`).join('') || '<div class="empty" style="padding:10px;">No one found.</div>';
+      }, 250);
+    });
+    overlay.querySelector('#gsAddResults').addEventListener('click', async (e) => {
+      const addBtn = e.target.closest('[data-add-member]');
+      if (!addBtn) return;
+      try {
+        const g = await api(`/groups/${group.id}/members/${addBtn.dataset.addMember}`, { method: 'POST' });
+        group = { ...group, members: g.members }; renderMembers(group);
+        overlay.querySelector('#gsAddSearch').value = ''; overlay.querySelector('#gsAddResults').innerHTML = '';
+        toast('Member added.');
+        loadGroups();
+      } catch (err) { toast(err.message); }
+    });
+  }
+}
+
 /* ==================================================================
    SETTINGS
    ================================================================== */
@@ -1286,11 +1681,36 @@ document.querySelectorAll('[data-setting]').forEach(el => {
     const key = el.dataset.setting;
     const value = el.type === 'checkbox' ? el.checked : el.value;
     try {
-      await api('/settings', { method: 'PUT', body: { [key]: value } });
+      const settings = await api('/settings', { method: 'PUT', body: { [key]: value } });
+      state.me = { ...state.me, settings };
       toast('Setting saved.');
     } catch (err) { toast(err.message); }
   });
 });
+
+document.getElementById('blockedAccountsRow').addEventListener('click', openBlockedAccounts);
+async function openBlockedAccounts() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal"><h3>Blocked accounts</h3><div id="blockedList"><div class="empty">Loading…</div></div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="blockedClose">Close</button></div></div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#blockedClose').addEventListener('click', () => overlay.remove());
+  try {
+    const blocked = await api('/blocked');
+    const list = overlay.querySelector('#blockedList');
+    list.innerHTML = blocked.length ? blocked.map(u => `
+      <div class="member-manage-row">${avatarHTML(u, 'sm')}<div class="who"><div class="name">${escapeHTML(u.name)}</div></div>
+      <button class="btn btn-sm" data-unblock="${u.id}">Unblock</button></div>`).join('') : `<div class="empty">You haven't blocked anyone.</div>`;
+    list.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-unblock]');
+      if (!btn) return;
+      await api(`/unblock/${btn.dataset.unblock}`, { method: 'POST' });
+      btn.closest('.member-manage-row').remove();
+      toast('Unblocked.');
+    });
+  } catch (err) { overlay.querySelector('#blockedList').innerHTML = `<div class="empty">${escapeHTML(err.message)}</div>`; }
+}
 
 /* ==================================================================
    SOCKET.IO — presence, DMs, groups, notifications, calls
@@ -1336,6 +1756,14 @@ function connectSocket() {
       if (body) { body.insertAdjacentHTML('beforeend', bubbleHTML(msg)); body.scrollTop = body.scrollHeight; }
     }
   });
+  state.socket.on('group:updated', (g) => {
+    if (state.view === 'groups') loadGroups();
+  });
+  state.socket.on('group:removed', ({ groupId }) => {
+    toast('You were removed from a group.');
+    if (state.activeGroupId === groupId) { state.activeGroupId = null; }
+    if (state.view === 'groups') loadGroups();
+  });
 
   state.socket.on('notification', (n) => {
     if (n.type === 'like') toast(`${n.from.name || n.from.username} liked your entry.`);
@@ -1350,12 +1778,15 @@ function connectSocket() {
   state.socket.on('call:answered', async ({ answer }) => {
     await state.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
     setCallStatus('Connected');
+    startCallTimer();
   });
   state.socket.on('call:ice', ({ candidate }) => {
     if (state.peerConnection && candidate) state.peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
   });
   state.socket.on('call:declined', () => { toast('Call declined.'); endCall(false); });
   state.socket.on('call:ended', () => { toast('Call ended.'); endCall(false); });
+  state.socket.on('call:peer_mute', ({ muted }) => setCallStatus(muted ? 'They muted their mic' : 'Connected'));
+  state.socket.on('call:peer_video_toggle', ({ videoOn }) => setCallStatus(videoOn ? 'Connected' : 'Their video is off'));
 }
 
 /* -------- calling UI + WebRTC -------- */
@@ -1363,6 +1794,9 @@ const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
 async function startCall(user, kind) {
   state.callPeerId = user.id;
+  state.callKind = kind;
+  state.callMuted = false;
+  state.callVideoOn = kind === 'video';
   buildCallOverlay(user, kind, 'Calling…');
   try {
     state.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: kind === 'video' });
@@ -1407,7 +1841,10 @@ function showIncomingCall(fromId, fromUser, kind, offer) {
 
 async function acceptCall(fromId, fromUser, kind, offer) {
   state.callPeerId = fromId;
-  buildCallOverlay(fromUser, kind, 'Connected');
+  state.callKind = kind;
+  state.callMuted = false;
+  state.callVideoOn = kind === 'video';
+  buildCallOverlay(fromUser, kind, 'Connecting…');
   try {
     state.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: kind === 'video' });
   } catch (e) { toast('Camera/microphone permission is needed for calls.'); return endCall(true); }
@@ -1423,6 +1860,8 @@ async function acceptCall(fromId, fromUser, kind, offer) {
   const answer = await state.peerConnection.createAnswer();
   await state.peerConnection.setLocalDescription(answer);
   state.socket.emit('call:answer', { to: fromId, answer });
+  setCallStatus('Connected');
+  startCallTimer();
 }
 
 function buildCallOverlay(user, kind, status) {
@@ -1432,9 +1871,16 @@ function buildCallOverlay(user, kind, status) {
   overlay.innerHTML = `
     <div class="call-title">${escapeHTML(user.name || user.username)}</div>
     <div class="call-sub" id="callStatus">${status}</div>
+    <div class="call-timer hidden" id="callTimer">00:00</div>
     <video id="remoteVideo" autoplay playsinline ${kind === 'video' ? '' : 'style="display:none"'}></video>
     <video id="localVideo" autoplay playsinline muted ${kind === 'video' ? '' : 'style="display:none"'}></video>
     <div class="call-controls">
+      <button class="btn btn-icon" id="muteBtn" title="Mute">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+      </button>
+      ${kind === 'video' ? `<button class="btn btn-icon" id="videoToggleBtn" title="Turn video off">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      </button>` : ''}
       <button class="btn btn-icon btn-danger" id="hangupBtn" title="End call">
         <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 9c-2.6 0-5 .8-7 2.2a1 1 0 0 0-.2 1.4l2 2.7a1 1 0 0 0 1.3.3c.9-.5 1.9-.8 2.9-1v-2.4c0-.4.3-.8.7-.9 1.5-.4 3-.4 4.5 0 .4.1.7.5.7.9v2.4c1 .2 2 .5 2.9 1a1 1 0 0 0 1.3-.3l2-2.7a1 1 0 0 0-.2-1.4C17 9.8 14.6 9 12 9z"/></svg>
       </button>
@@ -1444,11 +1890,40 @@ function buildCallOverlay(user, kind, status) {
     if (state.callPeerId) state.socket.emit('call:end', { to: state.callPeerId });
     endCall(false);
   });
+  document.getElementById('muteBtn').addEventListener('click', () => {
+    state.callMuted = !state.callMuted;
+    if (state.localStream) state.localStream.getAudioTracks().forEach(t => t.enabled = !state.callMuted);
+    document.getElementById('muteBtn').classList.toggle('active-toggle', state.callMuted);
+    if (state.callPeerId) state.socket.emit('call:mute', { to: state.callPeerId, muted: state.callMuted });
+  });
+  const videoToggleBtn = document.getElementById('videoToggleBtn');
+  if (videoToggleBtn) videoToggleBtn.addEventListener('click', () => {
+    state.callVideoOn = !state.callVideoOn;
+    if (state.localStream) state.localStream.getVideoTracks().forEach(t => t.enabled = state.callVideoOn);
+    videoToggleBtn.classList.toggle('active-toggle', !state.callVideoOn);
+    document.getElementById('localVideo').style.display = state.callVideoOn ? 'block' : 'none';
+    if (state.callPeerId) state.socket.emit('call:video_toggle', { to: state.callPeerId, videoOn: state.callVideoOn });
+  });
 }
 function setCallStatus(text) { const el = document.getElementById('callStatus'); if (el) el.textContent = text; }
+function startCallTimer() {
+  state.callStartedAt = Date.now();
+  const timerEl = document.getElementById('callTimer');
+  if (timerEl) timerEl.classList.remove('hidden');
+  clearInterval(state.callTimerInterval);
+  state.callTimerInterval = setInterval(() => {
+    if (!state.callStartedAt || !timerEl) return;
+    const s = Math.floor((Date.now() - state.callStartedAt) / 1000);
+    const mm = String(Math.floor(s / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    timerEl.textContent = `${mm}:${ss}`;
+  }, 1000);
+}
 function endCall() {
   if (state.peerConnection) { state.peerConnection.close(); state.peerConnection = null; }
   if (state.localStream) { state.localStream.getTracks().forEach(t => t.stop()); state.localStream = null; }
+  clearInterval(state.callTimerInterval);
+  state.callTimerInterval = null; state.callStartedAt = null;
   const overlay = document.getElementById('callOverlay');
   if (overlay) overlay.remove();
   state.callPeerId = null;
