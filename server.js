@@ -154,11 +154,13 @@ function parseSettings(row) {
 // APP + SOCKET SETUP
 // ---------------------------------------------------------------
 const app = express();
-app.use(express.json({ limit: '35mb' })); // base64 images/videos
+app.use(express.json({ limit: '100mb' })); // base64 images/videos
 app.use(express.static(path.join(__dirname, 'public')));
 
 const server = http.createServer(app);
-const io = new Server(server, { maxHttpBufferSize: 30e6 });
+const io = new Server(server, {
+  maxHttpBufferSize: 100 * 1024 * 1024
+});
 
 // userId -> Set of socket ids (multiple tabs/devices)
 const onlineUsers = new Map();
