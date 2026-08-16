@@ -25,12 +25,15 @@
     --rose:#d6e831;
     --rose-soft:rgba(237,73,86,.10);
     --green:#2ecc71;
+    --gold:#e0a72e;
+    --gold-soft:rgba(224,167,46,.14);
     --shadow: 0 8px 32px rgba(0,0,0,.10);
     --radius: 12px;
     --glass:rgba(255,255,255,.68);
     --glass-strong:rgba(255,255,255,.85);
     --glass-border:rgba(255,255,255,.6);
     --ig-gradient: linear-gradient(45deg,#f9ce34 0%,#ee2a7b 45%,#46c4ef 100%);
+    --vh100: 100vh;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
@@ -46,6 +49,7 @@
     font-family:'Inter',system-ui,sans-serif;
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
+    overscroll-behavior:none;
   }
   ::selection{ background:var(--amber-soft); color:var(--paper); }
   ::-webkit-scrollbar{ width:9px; height:9px; }
@@ -54,6 +58,7 @@
   a{ color:inherit; }
   button{ font-family:inherit; }
   :focus-visible{ outline:2px solid var(--amber); outline-offset:2px; border-radius:6px; }
+  img, video{ content-visibility:auto; }
 
   h1,h2,h3,.serif{ font-family:'Inter',sans-serif; letter-spacing:-.01em; font-weight:700; }
   .mono{ font-family:'IBM Plex Mono',monospace; }
@@ -81,14 +86,17 @@
   .btn-ghost{ background:transparent; }
   .btn-danger{ background:var(--rose-soft); color:var(--rose); border-color:transparent; }
   .btn-danger:hover{ border-color:var(--rose); }
+  .btn-gold{ background:var(--gold-soft); color:var(--gold); border-color:transparent; }
+  .btn-gold:hover{ border-color:var(--gold); }
   .btn-sm{ padding:6px 12px; font-size:13px; border-radius:8px; }
   .btn-icon{ width:38px; height:38px; padding:0; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; }
   .btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
 
-  input[type=text], input[type=password], input[type=email], textarea, select{
+  input[type=text], input[type=password], input[type=email], input[type=color], textarea, select{
     width:100%; background:var(--ink-800); border:1px solid var(--line); color:var(--paper);
     padding:11px 13px; border-radius:10px; font-size:14.5px; font-family:inherit;
   }
+  input[type=color]{ padding:4px; height:40px; cursor:pointer; }
   textarea{ resize:vertical; }
   input::placeholder, textarea::placeholder{ color:var(--paper-faint); }
   input:focus, textarea:focus, select:focus{ border-color:var(--amber); }
@@ -105,13 +113,15 @@
   .dot.online{ background:var(--green); box-shadow:0 0 0 3px rgba(111,191,139,.18); }
   .avatar-wrap{ position:relative; flex-shrink:0; }
   .avatar-wrap .dot{ position:absolute; right:0; bottom:0; border:2px solid var(--ink-850); }
+  .pro-badge{ display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700; color:var(--gold); background:var(--gold-soft); padding:2px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:.03em; vertical-align:middle; }
 
   /* ---------------- app is mobile-only: everything is centered in a
-     phone-width column; on wide screens it sits inside a soft frame ---- */
+     phone-width column, sized with dvh so mobile browser chrome
+     (address bar showing/hiding) never breaks scrolling ---------------- */
   html{ background:#0c0d12; }
   body{ display:flex; justify-content:center; }
   #phoneFrame{
-    width:100%; max-width:480px; min-height:100vh; position:relative;
+    width:100%; max-width:480px; min-height:var(--vh100); position:relative;
     background:
       radial-gradient(900px 560px at 8% -8%, rgba(249,206,52,.22), transparent 55%),
       radial-gradient(900px 560px at 88% 6%, rgba(238,42,123,.16), transparent 55%),
@@ -119,14 +129,15 @@
       var(--ink-900);
     box-shadow: 0 0 0 1px var(--line-soft);
     overflow:hidden;
+    display:flex; flex-direction:column;
   }
   @media (min-width:481px){
     body{ padding:28px 0; }
-    #phoneFrame{ min-height:calc(100vh - 56px); border-radius:34px; box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 10px #111319, 0 0 0 12px #2a2d38; }
+    #phoneFrame{ min-height:calc(var(--vh100) - 56px); max-height:calc(var(--vh100) - 56px); border-radius:34px; box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 10px #111319, 0 0 0 12px #2a2d38; }
   }
 
   #authView{
-    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    min-height:var(--vh100); display:flex; align-items:center; justify-content:center; padding:24px;
   }
   .auth-card{
     width:100%; max-width:400px; background:var(--glass); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
@@ -149,19 +160,20 @@
   .auth-toggle button{ background:none; border:none; color:var(--amber); font-weight:600; cursor:pointer; font-size:14px; padding:0; }
   .auth-error{ background:var(--rose-soft); color:var(--rose); border:1px solid transparent; padding:10px 12px; border-radius:8px; font-size:13.5px; margin-bottom:14px; display:none; }
 
-  #appView{ display:none; min-height:100vh; flex-direction:column; }
+  #appView{ display:none; min-height:var(--vh100); flex-direction:column; flex:1; }
   #appView.active{ display:flex; }
 
-  .main{ flex:1; min-width:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  .main{ flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
   .topbar{
     height:56px; flex-shrink:0; border-bottom:1px solid var(--glass-border); display:flex; align-items:center;
     justify-content:space-between; padding:0 16px; background:var(--glass);
     backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); position:sticky; top:0; z-index:40;
   }
   .topbar h2{ font-size:17px; font-weight:600; margin:0; }
-  .view-scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:70px; }
+  .view-scroll{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; padding-bottom:70px; }
   .page{ max-width:640px; margin:0 auto; padding:18px 16px 24px; }
   .page.wide{ max-width:920px; }
+  .page.full{ max-width:none; padding:0; height:100%; }
 
   .toast-wrap{ position:fixed; bottom:calc(72px + env(safe-area-inset-bottom)); left:12px; right:12px; z-index:200; display:flex; flex-direction:column; gap:10px; max-width:480px; margin:0 auto; }
   .toast{
@@ -173,13 +185,12 @@
 
   /* ---------------- rail / bottom tab bar ---------------- */
   .rail{
-    position:fixed; bottom:0; left:0; right:0; width:100%; max-width:480px; margin:0 auto; height:auto;
+    flex-shrink:0; width:100%; height:auto;
     display:flex; flex-direction:row; justify-content:space-around; align-items:center;
     padding:8px 6px calc(8px + env(safe-area-inset-bottom));
     background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
     border-top:1px solid var(--glass-border); z-index:120; gap:0;
   }
-  .rail .brand-mark{ display:none; }
   .rail-btn{
     width:auto; min-width:44px; height:44px; flex:1; border-radius:12px; display:flex; align-items:center; justify-content:center;
     color:var(--paper-faint); cursor:pointer; border:1px solid transparent; background:none; position:relative;
@@ -191,11 +202,10 @@
     position:absolute; top:2px; right:2px; background:var(--rose); color:#fff; font-size:10px; font-weight:700;
     min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px;
   }
-  .rail-spacer{ display:none; }
-  .rail-self{ order:99; margin-bottom:0; cursor:pointer; }
+  .rail-self{ cursor:pointer; }
   .rail-self .avatar{ width:28px; height:28px; font-size:12px; }
 
-  #view-chat.page, #view-groups.page{ height:calc(100vh - 56px - 64px) !important; padding-bottom:0; max-width:none; }
+  #view-chat.page, #view-groups.page{ height:100%; }
 
   /* ---------------- composer / feed ---------------- */
   .composer{
@@ -205,7 +215,7 @@
   }
   .composer textarea{ border:none; background:none; padding:6px 2px; font-size:16px; min-height:56px; }
   .composer-imgprev{ position:relative; margin:6px 2px 4px; display:none; }
-  .composer-imgprev img, .composer-imgprev video{ max-height:220px; max-width:100%; border-radius:10px; display:block; }
+  .composer-imgprev img{ max-height:220px; max-width:100%; border-radius:10px; display:block; }
   .composer-imgprev .rm{ position:absolute; top:8px; right:8px; background:rgba(0,0,0,.6); border:none; color:#fff; width:26px; height:26px; border-radius:50%; cursor:pointer; }
   .composer-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:8px; gap:10px; }
 
@@ -218,11 +228,10 @@
   .post-head{ display:flex; align-items:flex-start; gap:12px; padding:14px 15px 8px; }
   .post-head .who{ flex:1; min-width:0; }
   .post-head .name{ font-weight:600; font-size:14.5px; }
-  .post-head .meta{ font-size:12.5px; color:var(--paper-faint); margin-top:1px; }
+  .post-head .meta{ font-size:12px; color:var(--paper-faint); margin-top:1px; }
   .post-content{ font-size:15px; line-height:1.55; white-space:pre-wrap; padding:0 15px 10px; overflow-wrap:anywhere; }
   .post-media{ width:100%; aspect-ratio:1/1; background:#0c0d12; position:relative; overflow:hidden; }
   .post-media img.post-image{ width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
-  .post-media video.post-video{ width:100%; height:100%; object-fit:cover; display:block; background:#000; }
   .post-actions{ display:flex; gap:2px; border-top:1px solid var(--line-soft); padding:6px 6px; }
   .action-btn{
     flex:1; background:none; border:none; color:var(--paper-dim); padding:8px 4px; border-radius:8px; cursor:pointer;
@@ -241,8 +250,12 @@
 
   .empty{ text-align:center; padding:60px 20px; color:var(--paper-faint); }
   .empty .serif{ font-size:20px; color:var(--paper-dim); margin-bottom:6px; }
+  .feed-sentinel{ height:1px; }
+  .feed-end{ text-align:center; padding:18px; color:var(--paper-faint); font-size:12.5px; }
+  .spinner{ width:22px; height:22px; margin:18px auto; border-radius:50%; border:2.5px solid var(--line); border-top-color:var(--amber); animation:spin .7s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
 
-  /* ---------------- image/video zoom lightbox ---------------- */
+  /* ---------------- image zoom lightbox ---------------- */
   .lightbox-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.94); z-index:400; display:flex;
     align-items:center; justify-content:center; touch-action:none; overflow:hidden;
@@ -278,6 +291,7 @@
   .profile-head{ display:flex; gap:18px; align-items:flex-start; margin-bottom:6px; }
   .profile-name{ font-size:22px; font-weight:600; margin:0 0 2px; }
   .profile-handle{ color:var(--amber); font-size:14px; margin:0 0 10px; }
+  .profile-status{ font-size:13px; color:var(--gold); margin:0 0 8px; font-style:italic; }
   .profile-bio{ font-size:14.5px; color:var(--paper-dim); line-height:1.5; margin:0 0 14px; }
   .stat-row{ display:flex; gap:20px; margin-bottom:16px; }
   .stat{ cursor:pointer; }
@@ -290,9 +304,7 @@
   .profile-tab.active{ color:var(--paper); border-bottom-color:var(--amber); }
   .media-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:2px; margin-top:4px; }
   .media-grid .cell{ aspect-ratio:1/1; background:var(--ink-700); position:relative; overflow:hidden; cursor:pointer; }
-  .media-grid .cell img, .media-grid .cell video{ width:100%; height:100%; object-fit:cover; }
-  .media-grid .cell .kind{ position:absolute; top:5px; right:5px; color:#fff; filter:drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
-  .media-grid .cell .kind svg{ width:15px; height:15px; }
+  .media-grid .cell img{ width:100%; height:100%; object-fit:cover; }
 
   /* ---------------- chat ---------------- */
   .split{ display:flex; height:100%; position:relative; overflow:hidden; }
@@ -300,9 +312,10 @@
   .conv-item{ display:flex; gap:11px; align-items:center; padding:13px 16px; cursor:pointer; border-bottom:1px solid var(--line-soft); }
   .conv-item:hover, .conv-item.active{ background:var(--ink-800); }
   .conv-item .who{ flex:1; min-width:0; }
-  .conv-item .name{ font-size:14px; font-weight:600; }
+  .conv-item .name{ font-size:14px; font-weight:600; display:flex; align-items:center; gap:5px; }
   .conv-item .last{ font-size:12.5px; color:var(--paper-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px; }
   .conv-unread{ background:var(--amber); color:#fff; font-size:11px; font-weight:700; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+  .mute-icon{ width:13px; height:13px; color:var(--paper-faint); flex-shrink:0; }
 
   .chat-pane{ width:100%; position:absolute; inset:0; transition:transform .22s ease; z-index:1; transform:translateX(100%); display:flex; flex-direction:column; }
   .conv-list.chat-open{ transform:translateX(-100%); }
@@ -312,17 +325,17 @@
   .chat-head .name{ font-weight:600; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .chat-head .status{ font-size:12px; color:var(--paper-faint); }
   .chat-back-btn{ display:flex; width:34px; height:34px; border-radius:9px; border:none; background:none; color:var(--paper); align-items:center; justify-content:center; flex-shrink:0; margin-right:2px; }
-  .chat-body{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px; display:flex; flex-direction:column; gap:4px; }
+  .chat-body{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; padding:14px; display:flex; flex-direction:column; gap:4px; }
   .bubble-row{ display:flex; margin-bottom:6px; }
   .bubble-row.me{ justify-content:flex-end; }
   .bubble{ max-width:80%; padding:10px 14px; border-radius:16px; font-size:14.5px; line-height:1.45; overflow-wrap:anywhere; }
   .bubble-row.me .bubble{ background:var(--ig-gradient); color:#fff; border-bottom-right-radius:4px; }
   .bubble-row.them .bubble{ background:var(--ink-700); color:var(--paper); border-bottom-left-radius:4px; }
   .bubble.media-bubble{ padding:4px; background:none !important; }
-  .bubble.media-bubble img, .bubble.media-bubble video{ max-width:220px; max-height:280px; border-radius:14px; display:block; cursor:zoom-in; }
+  .bubble.media-bubble img{ max-width:220px; max-height:280px; border-radius:14px; display:block; cursor:zoom-in; }
   .bubble.shared-post{ padding:0; overflow:hidden; border-radius:14px; width:200px; background:var(--ink-800) !important; color:var(--paper) !important; border:1px solid var(--line); }
   .bubble.shared-post .sp-media{ width:100%; aspect-ratio:1/1; background:#0c0d12; }
-  .bubble.shared-post .sp-media img, .bubble.shared-post .sp-media video{ width:100%; height:100%; object-fit:cover; }
+  .bubble.shared-post .sp-media img{ width:100%; height:100%; object-fit:cover; }
   .bubble.shared-post .sp-body{ padding:8px 10px; font-size:12.5px; }
   .bubble-time{ font-size:10.5px; color:var(--paper-faint); margin-top:3px; padding:0 4px; }
   .typing-indicator{ font-size:12.5px; color:var(--paper-faint); padding:0 14px 6px; font-style:italic; height:16px; flex-shrink:0; }
@@ -331,7 +344,7 @@
   .chat-attach-btn{ width:38px; height:38px; border-radius:50%; border:none; background:var(--ink-700); color:var(--paper-dim); display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
   .empty-chat{ flex:1; display:flex; align-items:center; justify-content:center; color:var(--paper-faint); padding:20px; text-align:center; }
   .chat-media-preview{ padding:8px 12px 0; display:none; position:relative; }
-  .chat-media-preview img, .chat-media-preview video{ max-height:140px; border-radius:10px; }
+  .chat-media-preview img{ max-height:140px; border-radius:10px; }
   .chat-media-preview .rm{ position:absolute; top:2px; left:118px; background:rgba(0,0,0,.6); border:none; color:#fff; width:24px; height:24px; border-radius:50%; }
 
   /* ---------------- groups ---------------- */
@@ -351,6 +364,8 @@
   /* ---------------- settings ---------------- */
   .settings-section{ margin-bottom:26px; }
   .settings-section h3{ font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--paper-faint); margin:0 0 10px; font-weight:600; font-family:'Inter'; }
+  .settings-section.premium{ border:1px solid var(--gold-soft); border-radius:14px; padding:14px 16px 4px; background:linear-gradient(180deg, rgba(224,167,46,.06), transparent); }
+  .settings-section.premium h3{ color:var(--gold); }
   .setting-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line-soft); gap:20px; }
   .setting-row:last-child{ border-bottom:none; }
   .setting-row .label{ font-size:14.5px; font-weight:500; }
@@ -395,10 +410,6 @@
   .call-controls .btn-icon{ width:54px; height:54px; border-radius:50%; }
   .call-controls .btn-icon.active-toggle{ background:#fff; color:#111; }
 
-  /* ==================================================================
-     RESPONSIVE — this app targets mobile viewports only. On wide
-     screens it's shown inside a centered phone frame (see #phoneFrame).
-     ================================================================== */
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
   }
@@ -457,18 +468,14 @@
           <textarea id="postText" placeholder="What happened today?" rows="2"></textarea>
           <div class="composer-imgprev" id="composerImgPrev"></div>
           <div class="composer-foot">
-            <div class="row gap-8">
-              <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
-                📷 Photo<input type="file" accept="image/*" id="composerFile" class="hidden">
-              </label>
-              <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
-                🎬 Video<input type="file" accept="video/*" id="composerVideoFile" class="hidden">
-              </label>
-            </div>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+              📷 Photo<input type="file" accept="image/*" id="composerFile" class="hidden">
+            </label>
             <button class="btn btn-primary btn-sm" id="postSubmitBtn">Post entry</button>
           </div>
         </div>
         <div id="feedList"></div>
+        <div class="feed-sentinel" id="feedSentinel"></div>
       </section>
 
       <!-- SEARCH -->
@@ -486,7 +493,7 @@
       </section>
 
       <!-- CHAT -->
-      <section id="view-chat" class="page hidden" style="max-width:none;padding:0;height:calc(100vh - 64px);">
+      <section id="view-chat" class="page full hidden">
         <div class="split">
           <div class="conv-list" id="convList"></div>
           <div class="chat-pane" id="chatPane">
@@ -496,7 +503,7 @@
       </section>
 
       <!-- GROUPS -->
-      <section id="view-groups" class="page hidden" style="max-width:none;padding:0;height:calc(100vh - 64px);">
+      <section id="view-groups" class="page full hidden">
         <div class="split">
           <div class="conv-list" id="groupList">
             <div style="padding:14px 16px;">
@@ -511,6 +518,31 @@
 
       <!-- SETTINGS -->
       <section id="view-settings" class="page hidden">
+
+        <div class="settings-section premium">
+          <h3>★ Premium &amp; professional</h3>
+          <div class="setting-row">
+            <div><div class="label">Account type</div><div class="desc" id="accountTypeDesc">Free account</div></div>
+            <button class="btn btn-sm btn-gold" id="togglePremiumBtn">Go Premium</button>
+          </div>
+          <div class="setting-row">
+            <div><div class="label">Accent color</div><div class="desc">Personalize buttons &amp; highlights across the app</div></div>
+            <input type="color" data-setting="accentColor" style="width:52px;padding:2px;">
+          </div>
+          <div class="setting-row">
+            <div><div class="label">Show premium badge</div><div class="desc">Display a badge next to your name</div></div>
+            <label class="switch"><input type="checkbox" data-setting="proBadge"><span class="track"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="label">Priority inbox</div><div class="desc">Sort messages from people you follow first</div></div>
+            <label class="switch"><input type="checkbox" data-setting="priorityInbox"><span class="track"></span></label>
+          </div>
+          <div class="field-group" style="padding-bottom:14px;">
+            <label class="field">Custom status</label>
+            <input type="text" data-setting="customStatus" maxlength="60" placeholder="e.g. Writing every day this month ✍️">
+          </div>
+        </div>
+
         <div class="settings-section">
           <h3>Privacy</h3>
           <div class="setting-row">
@@ -550,29 +582,35 @@
             <span class="faint">›</span>
           </div>
         </div>
+
         <div class="settings-section">
           <h3>Notifications</h3>
+          <div class="setting-row">
+            <div><div class="label">Push notifications</div><div class="desc">Show a notification for new messages &amp; activity</div></div>
+            <label class="switch"><input type="checkbox" data-setting="pushNotifications"><span class="track"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="label">Notification sound</div><div class="desc">Play a ringtone/chime for messages &amp; calls</div></div>
+            <label class="switch"><input type="checkbox" data-setting="notificationSound"><span class="track"></span></label>
+          </div>
           <div class="setting-row">
             <div><div class="label">Email notifications</div></div>
             <label class="switch"><input type="checkbox" data-setting="emailNotifications"><span class="track"></span></label>
           </div>
-          <div class="setting-row">
-            <div><div class="label">Push notifications</div></div>
-            <label class="switch"><input type="checkbox" data-setting="pushNotifications"><span class="track"></span></label>
+          <div class="setting-row link" id="notifPermRow">
+            <div><div class="label">Browser notification permission</div><div class="desc" id="notifPermDesc">Tap to allow notifications on this device</div></div>
+            <span class="faint">›</span>
           </div>
         </div>
+
         <div class="settings-section">
-          <h3>Appearance &amp; playback</h3>
+          <h3>Appearance &amp; data</h3>
           <div class="setting-row">
             <div><div class="label">Dark mode</div><div class="desc">This diary is dark-mode by design — toggle for a lighter feel later</div></div>
             <label class="switch"><input type="checkbox" data-setting="darkMode"><span class="track"></span></label>
           </div>
           <div class="setting-row">
-            <div><div class="label">Autoplay videos</div></div>
-            <label class="switch"><input type="checkbox" data-setting="autoplayVideos"><span class="track"></span></label>
-          </div>
-          <div class="setting-row">
-            <div><div class="label">Data saver</div><div class="desc">Reduce media quality on slow connections</div></div>
+            <div><div class="label">Data saver</div><div class="desc">Load smaller photo previews on slow connections</div></div>
             <label class="switch"><input type="checkbox" data-setting="dataSaver"><span class="track"></span></label>
           </div>
           <div class="setting-row">
@@ -585,6 +623,7 @@
             </select>
           </div>
         </div>
+
         <div class="settings-section">
           <h3>Security</h3>
           <div class="setting-row">
@@ -625,6 +664,24 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 /* ==================================================================
+   MOBILE VIEWPORT HEIGHT FIX
+   iOS/Android address-bar show/hide used to make 100vh taller than
+   the visible area, which is what made the feed look like it
+   "wouldn't scroll" (the bottom nav + composer pushed the last
+   posts under the browser chrome). We measure the real visible
+   height with window.innerHeight / visualViewport and keep a CSS
+   var in sync, recalculated on resize/orientation change.
+   ================================================================== */
+function setRealViewportHeight() {
+  const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  document.documentElement.style.setProperty('--vh100', h + 'px');
+}
+setRealViewportHeight();
+window.addEventListener('resize', setRealViewportHeight);
+window.addEventListener('orientationchange', () => setTimeout(setRealViewportHeight, 150));
+if (window.visualViewport) window.visualViewport.addEventListener('resize', setRealViewportHeight);
+
+/* ==================================================================
    STATE + API HELPERS
    ================================================================== */
 const state = {
@@ -644,19 +701,36 @@ const state = {
   callTimerInterval: null,
   onlineUserIds: new Set(),
   chatMediaData: null,
-  chatMediaType: null,
   groupMediaData: null,
-  groupMediaType: null,
+  feedCursor: null,
+  feedHasMore: true,
+  feedLoading: false,
+  feedObserver: null,
 };
 
 async function api(path, opts = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const headers = { ...(opts.headers || {}) };
+  let body = opts.body;
+  if (body && !(body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+    body = JSON.stringify(body);
+  }
   if (state.token) headers.Authorization = 'Bearer ' + state.token;
-  const res = await fetch('/api' + path, { ...opts, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const res = await fetch('/api' + path, { ...opts, headers, body });
   let data = {};
   try { data = await res.json(); } catch (e) {}
   if (!res.ok) throw new Error(data.error || 'Something went wrong.');
   return data;
+}
+
+// Upload a photo file to disk via multipart/form-data and get back
+// a short URL — this replaces sending base64 blobs in JSON, which
+// was the main reason posts/chats/profile loaded slowly before.
+async function uploadPhoto(file) {
+  const fd = new FormData();
+  fd.append('photo', file);
+  const r = await api('/upload', { method: 'POST', body: fd });
+  return r.url;
 }
 
 function initials(name) {
@@ -668,6 +742,9 @@ function avatarHTML(user, size) {
   if (user && user.avatar) return `<div class="${cls}" style="background-image:url('${user.avatar}')"></div>`;
   return `<div class="${cls}">${initials(user ? (user.name || user.username) : '?')}</div>`;
 }
+function proBadgeHTML(user) {
+  return user && user.proBadge ? '<span class="pro-badge">★ Pro</span>' : '';
+}
 function timeAgo(iso) {
   if (!iso) return '';
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -676,6 +753,10 @@ function timeAgo(iso) {
   if (s < 86400) return Math.floor(s / 3600) + 'h ago';
   if (s < 604800) return Math.floor(s / 86400) + 'd ago';
   return new Date(iso).toLocaleDateString();
+}
+function fullDateTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 }
 function timeShort(iso) {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -697,21 +778,78 @@ function toast(msg) {
   document.getElementById('toastWrap').appendChild(el);
   setTimeout(() => el.remove(), 4200);
 }
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-function downloadDataUrl(dataUrl, filename) {
+function downloadUrl(url, filename) {
   const a = document.createElement('a');
-  a.href = dataUrl;
+  a.href = url;
   a.download = filename;
+  a.target = '_blank';
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+function applyAccentColor(hex) {
+  if (!hex) return;
+  document.documentElement.style.setProperty('--amber', hex);
+}
+
+/* ==================================================================
+   NOTIFICATIONS — Web Notification API + a synthesized ringtone
+   (built with the Web Audio API, so no external sound file is
+   needed and it loads instantly). Respects the pushNotifications /
+   notificationSound settings and any muted conversations/groups.
+   ================================================================== */
+let audioCtx = null;
+function beep({ freq = 880, duration = 0.14, type = 'sine', gain = 0.18, delay = 0 } = {}) {
+  if (!state.me?.settings?.notificationSound) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t0 = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(gain, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0 + duration + 0.02);
+  } catch (e) {}
+}
+function playMessageChime() { beep({ freq: 740, duration: 0.12 }); beep({ freq: 1040, duration: 0.16, delay: 0.09 }); }
+let ringtoneInterval = null;
+function startRingtone() {
+  if (!state.me?.settings?.notificationSound) return;
+  stopRingtone();
+  const ring = () => { beep({ freq: 620, duration: 0.28, type: 'triangle', gain: 0.22 }); beep({ freq: 780, duration: 0.28, type: 'triangle', gain: 0.22, delay: 0.32 }); };
+  ring();
+  ringtoneInterval = setInterval(ring, 1400);
+}
+function stopRingtone() { clearInterval(ringtoneInterval); ringtoneInterval = null; }
+
+function requestNotifPermission() {
+  if (!('Notification' in window)) return toast('This browser does not support notifications.');
+  Notification.requestPermission().then(refreshNotifPermRow);
+}
+function refreshNotifPermRow() {
+  const desc = document.getElementById('notifPermDesc');
+  if (!desc || !('Notification' in window)) return;
+  const map = { granted: 'Allowed on this device ✓', denied: 'Blocked — enable it in your browser settings', default: 'Tap to allow notifications on this device' };
+  desc.textContent = map[Notification.permission] || map.default;
+}
+function pushNotify(title, body, { sound = true, tag } = {}) {
+  if (!state.me?.settings?.pushNotifications) return;
+  if (sound) playMessageChime();
+  if (document.visibilityState === 'visible' && state.view !== 'chat' && state.view !== 'groups') {
+    // still surface an in-app toast even when the tab is focused
+    toast(title + (body ? ' — ' + body : ''));
+  }
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, tag, icon: '/favicon.ico' }); } catch (e) {}
+  }
+}
+function isMuted(kind, id) {
+  const list = state.me?.settings?.[kind === 'conv' ? 'mutedConversations' : 'mutedGroups'] || [];
+  return list.map(Number).includes(Number(id));
 }
 
 /* ==================================================================
@@ -783,11 +921,11 @@ function showView(view, opts = {}) {
   document.querySelectorAll('#viewScroll > section').forEach(s => s.classList.add('hidden'));
   document.getElementById('view-' + view).classList.remove('hidden');
   document.getElementById('topbarTitle').textContent = opts.title || titles[view] || '';
-  if (view === 'feed') loadFeed();
+  if (view === 'feed' && !opts.skipReload) loadFeed(true);
   if (view === 'search') document.getElementById('searchInput').focus();
   if (view === 'chat') { loadConversations(); closeMobilePane('chat'); }
   if (view === 'groups') { loadGroups(); closeMobilePane('groups'); }
-  if (view === 'settings') loadSettings();
+  if (view === 'settings') { loadSettings(); refreshNotifPermRow(); }
 }
 
 function closeMobilePane(kind) {
@@ -810,85 +948,97 @@ function openMobilePane(kind) {
 }
 
 /* ==================================================================
-   FEED
+   FEED — infinite scroll, photo-only composer, single upload call
    ================================================================== */
 const composerFile = document.getElementById('composerFile');
-const composerVideoFile = document.getElementById('composerVideoFile');
-let composerImageData = null;
-let composerMediaType = null;
+let composerImageData = null; // local preview (data URL) until upload
+let composerImageFile = null;
 
-function setComposerMedia(dataUrl, kind) {
-  composerImageData = dataUrl;
-  composerMediaType = kind;
-  const prev = document.getElementById('composerImgPrev');
-  prev.style.display = 'block';
-  prev.innerHTML = (kind === 'video'
-    ? `<video src="${dataUrl}" controls></video>`
-    : `<img src="${dataUrl}">`) + `<button class="rm" id="composerImgRm">✕</button>`;
-  document.getElementById('composerImgRm').addEventListener('click', clearComposerMedia);
+function setComposerMedia(file) {
+  composerImageFile = file;
+  const reader = new FileReader();
+  reader.onload = () => {
+    composerImageData = reader.result;
+    const prev = document.getElementById('composerImgPrev');
+    prev.style.display = 'block';
+    prev.innerHTML = `<img src="${composerImageData}"><button class="rm" id="composerImgRm">✕</button>`;
+    document.getElementById('composerImgRm').addEventListener('click', clearComposerMedia);
+  };
+  reader.readAsDataURL(file);
 }
 function clearComposerMedia() {
-  composerImageData = null; composerMediaType = null;
-  composerFile.value = ''; composerVideoFile.value = '';
+  composerImageData = null; composerImageFile = null;
+  composerFile.value = '';
   const prev = document.getElementById('composerImgPrev');
   prev.style.display = 'none'; prev.innerHTML = '';
 }
-composerFile.addEventListener('change', async () => {
-  if (!composerFile.files[0]) return;
-  setComposerMedia(await fileToBase64(composerFile.files[0]), 'image');
-});
-composerVideoFile.addEventListener('change', async () => {
-  if (!composerVideoFile.files[0]) return;
-  setComposerMedia(await fileToBase64(composerVideoFile.files[0]), 'video');
+composerFile.addEventListener('change', () => {
+  if (composerFile.files[0]) setComposerMedia(composerFile.files[0]);
 });
 
 document.getElementById('postSubmitBtn').addEventListener('click', async () => {
   const text = document.getElementById('postText').value.trim();
-  if (!text && !composerImageData) return toast('Write something or add media first.');
+  if (!text && !composerImageFile) return toast('Write something or add a photo first.');
   const btn = document.getElementById('postSubmitBtn');
   btn.disabled = true;
   try {
-    await api('/posts', { method: 'POST', body: { content: text, image: composerImageData, mediaType: composerMediaType } });
+    let imageUrl = null;
+    if (composerImageFile) imageUrl = await uploadPhoto(composerImageFile);
+    await api('/posts', { method: 'POST', body: { content: text, image: imageUrl } });
     document.getElementById('postText').value = '';
     clearComposerMedia();
-    loadFeed();
+    loadFeed(true);
   } catch (err) { toast(err.message); }
   btn.disabled = false;
 });
 
-async function loadFeed() {
+async function loadFeed(reset) {
+  if (state.feedLoading) return;
+  if (reset) { state.feedCursor = null; state.feedHasMore = true; }
+  if (!state.feedHasMore) return;
+  state.feedLoading = true;
   const list = document.getElementById('feedList');
-  list.innerHTML = '<div class="empty">Loading your feed…</div>';
+  if (reset) list.innerHTML = '<div class="spinner"></div>';
   try {
-    const posts = await api('/feed');
-    renderPosts(list, posts);
-  } catch (err) { list.innerHTML = `<div class="empty">${escapeHTML(err.message)}</div>`; }
+    const qs = new URLSearchParams({ limit: 20, ...(state.feedCursor ? { before: state.feedCursor } : {}) });
+    const { posts, hasMore } = await api('/feed?' + qs.toString());
+    state.feedHasMore = hasMore;
+    if (posts.length) state.feedCursor = posts[posts.length - 1].id;
+    if (reset) list.innerHTML = '';
+    if (reset && !posts.length) {
+      list.innerHTML = `<div class="empty"><div class="serif">A blank page.</div>Write your first entry, or follow someone to see theirs here.</div>`;
+    } else {
+      list.insertAdjacentHTML('beforeend', posts.map(postHTML).join(''));
+    }
+    document.getElementById('feedSentinel').classList.toggle('hidden', !hasMore);
+  } catch (err) {
+    if (reset) list.innerHTML = `<div class="empty">${escapeHTML(err.message)}</div>`;
+  }
+  state.feedLoading = false;
 }
 
-function renderPosts(container, posts) {
-  if (!posts.length) {
-    container.innerHTML = `<div class="empty"><div class="serif">A blank page.</div>Write your first entry, or follow someone to see theirs here.</div>`;
-    return;
-  }
-  container.innerHTML = posts.map(postHTML).join('');
+// IntersectionObserver-driven infinite scroll — much lighter than a
+// scroll-event listener and only fires the network call when the
+// sentinel actually enters view.
+function setupFeedObserver() {
+  if (state.feedObserver) state.feedObserver.disconnect();
+  state.feedObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) loadFeed(false);
+  }, { root: document.getElementById('viewScroll'), rootMargin: '400px' });
+  state.feedObserver.observe(document.getElementById('feedSentinel'));
 }
 
 function postHTML(p) {
   const mine = p.author.id === state.me.id;
-  let media = '';
-  if (p.image && p.mediaType === 'video') {
-    media = `<div class="post-media"><video class="post-video" src="${p.image}" controls playsinline ${state.me?.settings?.autoplayVideos === false ? '' : 'muted'} data-open-zoom="${p.id}" data-zoom-kind="video"></video></div>`;
-  } else if (p.image) {
-    media = `<div class="post-media"><img class="post-image" src="${p.image}" data-open-zoom="${p.id}" data-zoom-kind="image"></div>`;
-  }
+  const media = p.image ? `<div class="post-media"><img class="post-image" src="${p.image}" loading="lazy" decoding="async" data-open-zoom="${p.id}"></div>` : '';
   return `
-  <article class="post" data-post-id="${p.id}" data-post-media="${p.image ? escapeHTML(p.image).slice(0,0) : ''}">
+  <article class="post" data-post-id="${p.id}">
     ${mine ? `<button class="post-del" data-del-post="${p.id}" title="Delete">✕</button>` : ''}
     <div class="post-head">
       ${avatarHTML(p.author)}
       <div class="who">
-        <div class="name" data-goto-profile="${p.author.username}" style="cursor:pointer;">${escapeHTML(p.author.name)}</div>
-        <div class="meta mono">@${escapeHTML(p.author.username)} · ${timeAgo(p.createdAt)}</div>
+        <div class="name" data-goto-profile="${p.author.username}" style="cursor:pointer;">${escapeHTML(p.author.name)} ${proBadgeHTML(p.author)}</div>
+        <div class="meta mono">@${escapeHTML(p.author.username)} · #${p.id} · ${timeAgo(p.createdAt)} · ${fullDateTime(p.createdAt)}</div>
       </div>
     </div>
     ${p.content ? `<div class="post-content">${escapeHTML(p.content)}</div>` : ''}
@@ -902,7 +1052,7 @@ function postHTML(p) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-4.5 7.6 8.4 8.4 0 0 1-3.8.9 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 3 11.5 8.5 8.5 0 0 1 11.5 3h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
         <span>${p.commentCount}</span>
       </button>
-      ${p.image ? `<button class="action-btn" data-download="${p.id}" title="Download">
+      ${p.image ? `<button class="action-btn" data-download="${p.id}" title="Download photo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
       </button>` : ''}
       <button class="action-btn" data-share="${p.id}">
@@ -914,8 +1064,6 @@ function postHTML(p) {
   </article>`;
 }
 
-const postDataCache = new Map();
-
 document.getElementById('viewScroll').addEventListener('click', async (e) => {
   const likeBtn = e.target.closest('[data-like]');
   const shareBtn = e.target.closest('[data-share]');
@@ -925,11 +1073,7 @@ document.getElementById('viewScroll').addEventListener('click', async (e) => {
   const gotoProfile = e.target.closest('[data-goto-profile]');
   const zoomEl = e.target.closest('[data-open-zoom]');
 
-  if (zoomEl) {
-    const post = zoomEl.closest('.post');
-    const src = zoomEl.tagName === 'IMG' || zoomEl.tagName === 'VIDEO' ? zoomEl.getAttribute('src') : null;
-    return openLightbox(src, zoomEl.dataset.zoomKind);
-  }
+  if (zoomEl) return openLightbox(zoomEl.getAttribute('src'));
   if (gotoProfile) return showProfile(gotoProfile.dataset.gotoProfile);
 
   if (likeBtn) {
@@ -942,15 +1086,10 @@ document.getElementById('viewScroll').addEventListener('click', async (e) => {
   }
   if (dlBtn) {
     const post = dlBtn.closest('.post');
-    const media = post.querySelector('img.post-image, video.post-video');
-    if (media) {
-      const ext = media.tagName === 'VIDEO' ? 'mp4' : 'jpg';
-      downloadDataUrl(media.getAttribute('src'), `day-diary-post-${dlBtn.dataset.download}.${ext}`);
-    }
+    const img = post.querySelector('img.post-image');
+    if (img) downloadUrl(img.getAttribute('src'), `day-diary-post-${dlBtn.dataset.download}.jpg`);
   }
-  if (shareBtn) {
-    openShareSheet(shareBtn.dataset.share, shareBtn);
-  }
+  if (shareBtn) openShareSheet(shareBtn.dataset.share, shareBtn);
   if (delBtn) {
     if (!confirm('Delete this entry? This can\'t be undone.')) return;
     try {
@@ -993,15 +1132,12 @@ document.getElementById('viewScroll').addEventListener('submit', async (e) => {
   } catch (err) { toast(err.message); }
 });
 
-/* -------- image/video zoom lightbox -------- */
-function openLightbox(src, kind) {
+/* -------- image zoom lightbox -------- */
+function openLightbox(src) {
   if (!src) return;
   const overlay = document.createElement('div');
   overlay.className = 'lightbox-overlay';
-  overlay.innerHTML = kind === 'video'
-    ? `<video src="${src}" controls autoplay playsinline style="max-width:100%;max-height:100%;"></video>
-       <button class="lightbox-close" id="lbClose">✕</button>`
-    : `<img id="lbImg" src="${src}">
+  overlay.innerHTML = `<img id="lbImg" src="${src}">
        <button class="lightbox-close" id="lbClose">✕</button>
        <div class="lightbox-hint">Pinch or scroll to zoom · drag to pan</div>
        <div class="lightbox-controls">
@@ -1013,40 +1149,38 @@ function openLightbox(src, kind) {
   overlay.querySelector('#lbClose').addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 
-  if (kind !== 'video') {
-    const img = overlay.querySelector('#lbImg');
-    let scale = 1, panX = 0, panY = 0, startX = 0, startY = 0, dragging = false;
-    let pinchDist = null;
-    const apply = () => { img.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; };
-    const clampScale = (s) => Math.min(5, Math.max(1, s));
-    overlay.querySelector('#lbZoomIn').addEventListener('click', () => { scale = clampScale(scale + 0.5); apply(); });
-    overlay.querySelector('#lbZoomOut').addEventListener('click', () => { scale = clampScale(scale - 0.5); if (scale === 1) { panX = 0; panY = 0; } apply(); });
-    overlay.querySelector('#lbZoomReset').addEventListener('click', () => { scale = 1; panX = 0; panY = 0; apply(); });
-    img.addEventListener('wheel', (e) => { e.preventDefault(); scale = clampScale(scale - e.deltaY * 0.0015); if (scale === 1) { panX = 0; panY = 0; } apply(); }, { passive: false });
-    img.addEventListener('mousedown', (e) => { if (scale === 1) return; dragging = true; startX = e.clientX - panX; startY = e.clientY - panY; });
-    window.addEventListener('mousemove', (e) => { if (!dragging) return; panX = e.clientX - startX; panY = e.clientY - startY; apply(); });
-    window.addEventListener('mouseup', () => dragging = false);
-    img.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) {
-        pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      } else if (e.touches.length === 1 && scale > 1) {
-        dragging = true; startX = e.touches[0].clientX - panX; startY = e.touches[0].clientY - panY;
-      }
-    }, { passive: true });
-    img.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 2 && pinchDist) {
-        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        scale = clampScale(scale * (d / pinchDist)); pinchDist = d; apply();
-      } else if (e.touches.length === 1 && dragging) {
-        panX = e.touches[0].clientX - startX; panY = e.touches[0].clientY - startY; apply();
-      }
-    }, { passive: true });
-    img.addEventListener('touchend', () => { dragging = false; pinchDist = null; });
-    img.addEventListener('dblclick', () => { scale = scale === 1 ? 2.5 : 1; panX = 0; panY = 0; apply(); });
-  }
+  const img = overlay.querySelector('#lbImg');
+  let scale = 1, panX = 0, panY = 0, startX = 0, startY = 0, dragging = false;
+  let pinchDist = null;
+  const apply = () => { img.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; };
+  const clampScale = (s) => Math.min(5, Math.max(1, s));
+  overlay.querySelector('#lbZoomIn').addEventListener('click', () => { scale = clampScale(scale + 0.5); apply(); });
+  overlay.querySelector('#lbZoomOut').addEventListener('click', () => { scale = clampScale(scale - 0.5); if (scale === 1) { panX = 0; panY = 0; } apply(); });
+  overlay.querySelector('#lbZoomReset').addEventListener('click', () => { scale = 1; panX = 0; panY = 0; apply(); });
+  img.addEventListener('wheel', (e) => { e.preventDefault(); scale = clampScale(scale - e.deltaY * 0.0015); if (scale === 1) { panX = 0; panY = 0; } apply(); }, { passive: false });
+  img.addEventListener('mousedown', (e) => { if (scale === 1) return; dragging = true; startX = e.clientX - panX; startY = e.clientY - panY; });
+  window.addEventListener('mousemove', (e) => { if (!dragging) return; panX = e.clientX - startX; panY = e.clientY - startY; apply(); });
+  window.addEventListener('mouseup', () => dragging = false);
+  img.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    } else if (e.touches.length === 1 && scale > 1) {
+      dragging = true; startX = e.touches[0].clientX - panX; startY = e.touches[0].clientY - panY;
+    }
+  }, { passive: true });
+  img.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchDist) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      scale = clampScale(scale * (d / pinchDist)); pinchDist = d; apply();
+    } else if (e.touches.length === 1 && dragging) {
+      panX = e.touches[0].clientX - startX; panY = e.touches[0].clientY - startY; apply();
+    }
+  }, { passive: true });
+  img.addEventListener('touchend', () => { dragging = false; pinchDist = null; });
+  img.addEventListener('dblclick', () => { scale = scale === 1 ? 2.5 : 1; panX = 0; panY = 0; apply(); });
 }
 
-/* -------- share sheet: native share / copy / share directly to a user -------- */
+/* -------- share sheet -------- */
 async function openShareSheet(postId, btnEl) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -1104,7 +1238,7 @@ function incrementShareCount(postId) {
 }
 
 /* ==================================================================
-   SEARCH — live suggestions while typing
+   SEARCH
    ================================================================== */
 let searchDebounce;
 const searchInputEl = document.getElementById('searchInput');
@@ -1129,7 +1263,7 @@ function userRowHTML(u, term) {
   <div class="user-row">
     ${avatarHTML(u)}
     <div class="who" data-goto-profile="${u.username}">
-      <div class="name">${highlightMatch(u.name, term)}</div>
+      <div class="name">${highlightMatch(u.name, term)} ${proBadgeHTML(u)}</div>
       <div class="handle mono">@${highlightMatch(u.username, term)}</div>
     </div>
     <button class="btn btn-sm" data-message-user="${u.id}" data-message-username="${escapeHTML(u.username)}" data-message-name="${escapeHTML(u.name)}">Message</button>
@@ -1155,15 +1289,16 @@ async function showProfile(username) {
   box.innerHTML = '<div class="empty">Loading…</div>';
   try {
     const u = await api('/users/' + username);
-    const posts = await api(`/users/${username}/posts`);
+    const { posts } = await api(`/users/${username}/posts?limit=60`);
     box.innerHTML = `
       <div class="profile-head">
         ${avatarHTML(u, 'lg')}
         <div>
-          <h2 class="profile-name">${escapeHTML(u.name)}</h2>
+          <h2 class="profile-name">${escapeHTML(u.name)} ${proBadgeHTML(u)}</h2>
           <div class="profile-handle mono">@${escapeHTML(u.username)} ${u.isOnline ? '<span class="dot online" style="display:inline-block;margin-left:6px;"></span>' : ''}</div>
         </div>
       </div>
+      ${u.customStatus ? `<p class="profile-status">${escapeHTML(u.customStatus)}</p>` : ''}
       ${u.bio ? `<p class="profile-bio">${escapeHTML(u.bio)}</p>` : ''}
       <div class="stat-row">
         <div class="stat"><b>${u.postCount}</b><span>Entries</span></div>
@@ -1184,25 +1319,24 @@ async function showProfile(username) {
       <div id="profilePosts"></div>
       <div id="profileMedia" class="media-grid hidden"></div>
     `;
-    renderPosts(document.getElementById('profilePosts'), posts);
+    document.getElementById('profilePosts').innerHTML = posts.length ? posts.map(postHTML).join('') : `<div class="empty">No entries yet.</div>`;
     const mediaPosts = posts.filter(p => p.image);
     const mediaGrid = document.getElementById('profileMedia');
     mediaGrid.innerHTML = mediaPosts.length ? mediaPosts.map(p => `
-      <div class="cell" data-open-zoom="${p.id}" data-zoom-kind="${p.mediaType}">
-        ${p.mediaType === 'video'
-          ? `<video src="${p.image}" muted></video><span class="kind"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>`
-          : `<img src="${p.image}">`}
-      </div>`).join('') : `<div class="empty" style="grid-column:1/-1;">No photos or videos yet.</div>`;
+      <div class="cell" data-open-zoom-cell="${escapeHTML(p.image)}"><img src="${p.image}" loading="lazy" decoding="async"></div>`).join('')
+      : `<div class="empty" style="grid-column:1/-1;">No photos yet.</div>`;
     box.querySelectorAll('.profile-tab').forEach(tab => tab.addEventListener('click', () => {
       box.querySelectorAll('.profile-tab').forEach(t => t.classList.toggle('active', t === tab));
       document.getElementById('profilePosts').classList.toggle('hidden', tab.dataset.ptab !== 'posts');
       document.getElementById('profileMedia').classList.toggle('hidden', tab.dataset.ptab !== 'media');
     }));
     mediaGrid.addEventListener('click', (e) => {
-      const cell = e.target.closest('[data-open-zoom]');
-      if (!cell) return;
-      const media = cell.querySelector('img,video');
-      openLightbox(media.getAttribute('src'), cell.dataset.zoomKind);
+      const cell = e.target.closest('[data-open-zoom-cell]');
+      if (cell) openLightbox(cell.dataset.openZoomCell);
+    });
+    document.getElementById('profilePosts').addEventListener('click', (e) => {
+      const zoomEl = e.target.closest('[data-open-zoom]');
+      if (zoomEl) openLightbox(zoomEl.getAttribute('src'));
     });
 
     if (u.isMe) {
@@ -1251,22 +1385,24 @@ function openEditProfile(u) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  let newAvatar = null;
-  overlay.querySelector('#editAvatarFile').addEventListener('change', async (e) => {
-    if (e.target.files[0]) newAvatar = await fileToBase64(e.target.files[0]);
+  let newAvatarFile = null;
+  overlay.querySelector('#editAvatarFile').addEventListener('change', (e) => {
+    if (e.target.files[0]) newAvatarFile = e.target.files[0];
   });
   overlay.querySelector('#editCancel').addEventListener('click', () => overlay.remove());
   overlay.querySelector('#editSave').addEventListener('click', async () => {
+    const saveBtn = overlay.querySelector('#editSave');
+    saveBtn.disabled = true;
     try {
       const body = { name: overlay.querySelector('#editName').value.trim(), bio: overlay.querySelector('#editBio').value.trim() };
-      if (newAvatar) body.avatar = newAvatar;
+      if (newAvatarFile) body.avatar = await uploadPhoto(newAvatarFile);
       const updated = await api('/profile', { method: 'PUT', body });
       state.me = { ...state.me, ...updated };
       renderRailAvatar();
       overlay.remove();
       showProfile(state.me.username);
       toast('Profile updated.');
-    } catch (err) { toast(err.message); }
+    } catch (err) { toast(err.message); saveBtn.disabled = false; }
   });
 }
 
@@ -1279,11 +1415,12 @@ async function loadConversations() {
     const convs = await api('/conversations');
     let totalUnread = 0;
     list.innerHTML = convs.length ? convs.map(c => {
-      totalUnread += c.unread;
+      const muted = isMuted('conv', c.user.id);
+      if (!muted) totalUnread += c.unread;
       return `
       <div class="conv-item ${state.activeConvUserId === c.user.id ? 'active' : ''}" data-conv-uid="${c.user.id}" data-conv-uname="${escapeHTML(c.user.username)}" data-conv-name="${escapeHTML(c.user.name)}">
         <div class="avatar-wrap">${avatarHTML(c.user)}${c.user.isOnline ? '<span class="dot online"></span>' : ''}</div>
-        <div class="who"><div class="name">${escapeHTML(c.user.name)}</div><div class="last">${lastMessagePreview(c.lastMessage)}</div></div>
+        <div class="who"><div class="name">${escapeHTML(c.user.name)} ${proBadgeHTML(c.user)} ${muted ? '<svg class="mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>' : ''}</div><div class="last">${lastMessagePreview(c.lastMessage)}</div></div>
         ${c.unread ? `<span class="conv-unread">${c.unread}</span>` : ''}
       </div>`;
     }).join('') : `<div class="empty" style="padding:40px 16px;">No messages yet. Search for someone to say hi.</div>`;
@@ -1294,7 +1431,6 @@ async function loadConversations() {
 function lastMessagePreview(m) {
   if (!m) return '';
   if (m.shared_post_id) return '📎 Shared an entry';
-  if (m.media_type === 'video') return '🎬 Video';
   if (m.media_type === 'image') return '📷 Photo';
   return escapeHTML(m.text);
 }
@@ -1313,7 +1449,7 @@ document.getElementById('convList').addEventListener('click', (e) => {
 
 async function openChatWith(user) {
   state.activeConvUserId = user.id;
-  state.chatMediaData = null; state.chatMediaType = null;
+  state.chatMediaData = null;
   document.querySelectorAll('.conv-item').forEach(el => el.classList.toggle('active', Number(el.dataset.convUid) === user.id));
   const pane = document.getElementById('chatPane');
   pane.innerHTML = `
@@ -1329,13 +1465,16 @@ async function openChatWith(user) {
       <button class="btn btn-icon" id="callVideoBtn" title="Video call">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
       </button>
+      <button class="btn btn-icon" id="chatSettingsBtn" title="Chat settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+      </button>
     </div>
     <div class="chat-body" id="chatBody"></div>
     <div class="typing-indicator" id="typingIndicator"></div>
     <div class="chat-media-preview" id="chatMediaPreview"></div>
     <div class="chat-input-row">
-      <label class="chat-attach-btn" title="Send photo or video">
-        📎<input type="file" accept="image/*,video/*" id="chatAttachFile" class="hidden">
+      <label class="chat-attach-btn" title="Send a photo">
+        📎<input type="file" accept="image/*" id="chatAttachFile" class="hidden">
       </label>
       <input type="text" id="chatInput" placeholder="Write a message…">
       <button class="btn btn-primary btn-icon" id="chatSendBtn">➤</button>
@@ -1343,6 +1482,7 @@ async function openChatWith(user) {
   document.getElementById('chatHeadName').addEventListener('click', () => showProfile(user.username));
   document.getElementById('callAudioBtn').addEventListener('click', () => startCall(user, 'audio'));
   document.getElementById('callVideoBtn').addEventListener('click', () => startCall(user, 'video'));
+  document.getElementById('chatSettingsBtn').addEventListener('click', () => openChatSettings(user));
   const backBtn = document.getElementById('chatBackBtn');
   if (backBtn) backBtn.addEventListener('click', () => closeMobilePane('chat'));
   openMobilePane('chat');
@@ -1358,29 +1498,37 @@ async function openChatWith(user) {
 
   const attachInput = document.getElementById('chatAttachFile');
   const mediaPreview = document.getElementById('chatMediaPreview');
-  attachInput.addEventListener('change', async () => {
+  let chatMediaFile = null;
+  attachInput.addEventListener('change', () => {
     if (!attachInput.files[0]) return;
-    const file = attachInput.files[0];
-    state.chatMediaType = file.type.startsWith('video') ? 'video' : 'image';
-    state.chatMediaData = await fileToBase64(file);
-    mediaPreview.style.display = 'block';
-    mediaPreview.innerHTML = (state.chatMediaType === 'video'
-      ? `<video src="${state.chatMediaData}" controls></video>`
-      : `<img src="${state.chatMediaData}">`) + `<button class="rm" id="chatMediaRm">✕</button>`;
-    document.getElementById('chatMediaRm').addEventListener('click', () => {
-      state.chatMediaData = null; state.chatMediaType = null; attachInput.value = '';
-      mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
-    });
+    chatMediaFile = attachInput.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      mediaPreview.style.display = 'block';
+      mediaPreview.innerHTML = `<img src="${reader.result}"><button class="rm" id="chatMediaRm">✕</button>`;
+      document.getElementById('chatMediaRm').addEventListener('click', () => {
+        chatMediaFile = null; attachInput.value = '';
+        mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
+      });
+    };
+    reader.readAsDataURL(chatMediaFile);
   });
 
   const input = document.getElementById('chatInput');
-  const send = () => {
+  const send = async () => {
     const text = input.value.trim();
-    if (!text && !state.chatMediaData) return;
-    state.socket.emit('dm:send', { to: user.id, text, media: state.chatMediaData, mediaType: state.chatMediaType });
-    input.value = '';
-    state.chatMediaData = null; state.chatMediaType = null; attachInput.value = '';
-    mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
+    if (!text && !chatMediaFile) return;
+    const sendBtn = document.getElementById('chatSendBtn');
+    sendBtn.disabled = true;
+    try {
+      let mediaUrl = null;
+      if (chatMediaFile) mediaUrl = await uploadPhoto(chatMediaFile);
+      state.socket.emit('dm:send', { to: user.id, text, media: mediaUrl });
+      input.value = '';
+      chatMediaFile = null; attachInput.value = '';
+      mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
+    } catch (err) { toast(err.message); }
+    sendBtn.disabled = false;
   };
   document.getElementById('chatSendBtn').addEventListener('click', send);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
@@ -1396,23 +1544,68 @@ function bubbleHTML(m) {
   if (m.shared_post_id && m.shared_post) {
     const sp = m.shared_post;
     return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble shared-post" data-goto-post="${sp.id}">
-      ${sp.image ? `<div class="sp-media">${sp.mediaType === 'video' ? `<video src="${sp.image}" muted></video>` : `<img src="${sp.image}">`}</div>` : ''}
+      ${sp.image ? `<div class="sp-media"><img src="${sp.image}" loading="lazy"></div>` : ''}
       <div class="sp-body"><b>${escapeHTML(sp.author.name)}</b><br>${escapeHTML((sp.content || '').slice(0, 80))}</div>
     </div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
   }
-  if (m.media_type && m.media_type !== 'none' && m.media) {
-    const mediaTag = m.media_type === 'video'
-      ? `<video src="${m.media}" controls data-open-zoom data-zoom-kind="video"></video>`
-      : `<img src="${m.media}" data-open-zoom data-zoom-kind="image">`;
-    return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble media-bubble">${mediaTag}${m.text ? `<div style="padding:6px 4px 0;font-size:13.5px;">${escapeHTML(m.text)}</div>` : ''}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
+  if (m.media_type === 'image' && m.media) {
+    return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble media-bubble"><img src="${m.media}" loading="lazy" data-open-zoom>${m.text ? `<div style="padding:6px 4px 0;font-size:13.5px;">${escapeHTML(m.text)}</div>` : ''}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
   }
   return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble">${escapeHTML(m.text)}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
 }
 
 document.getElementById('chatPane').addEventListener('click', (e) => {
   const zoomEl = e.target.closest('[data-open-zoom]');
-  if (zoomEl) openLightbox(zoomEl.getAttribute('src'), zoomEl.dataset.zoomKind);
+  if (zoomEl) openLightbox(zoomEl.getAttribute('src'));
 });
+
+/* -------- chat settings: mute conversation, clear chat -------- */
+function openChatSettings(user) {
+  const muted = isMuted('conv', user.id);
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Chat settings</h3>
+      <div class="setting-row">
+        <div><div class="label">Mute notifications</div><div class="desc">Silence alerts &amp; ringtone for ${escapeHTML(user.name)}</div></div>
+        <label class="switch"><input type="checkbox" id="csMuteToggle" ${muted ? 'checked' : ''}><span class="track"></span></label>
+      </div>
+      <div class="setting-row link" id="csClearChat">
+        <div><div class="label" style="color:var(--rose);">Clear chat</div><div class="desc">Remove this conversation from your device</div></div>
+        <span class="faint">›</span>
+      </div>
+      <div class="setting-row link" id="csViewProfile">
+        <div><div class="label">View profile</div></div>
+        <span class="faint">›</span>
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="csClose">Close</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#csClose').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#csMuteToggle').addEventListener('change', async (e) => {
+    await toggleMute('conv', user.id, e.target.checked);
+    loadConversations();
+  });
+  overlay.querySelector('#csViewProfile').addEventListener('click', () => { overlay.remove(); showProfile(user.username); });
+  overlay.querySelector('#csClearChat').addEventListener('click', async () => {
+    if (!confirm('Clear this chat? This removes it from your device only.')) return;
+    try {
+      await api(`/messages/${user.id}`, { method: 'DELETE' });
+      overlay.remove();
+      document.getElementById('chatBody').innerHTML = '<div class="empty">Chat cleared.</div>';
+      loadConversations();
+      toast('Chat cleared.');
+    } catch (err) { toast(err.message); }
+  });
+}
+async function toggleMute(kind, id, on) {
+  const key = kind === 'conv' ? 'mutedConversations' : 'mutedGroups';
+  const list = new Set((state.me.settings[key] || []).map(Number));
+  if (on) list.add(Number(id)); else list.delete(Number(id));
+  const settings = await api('/settings', { method: 'PUT', body: { [key]: [...list] } });
+  state.me = { ...state.me, settings };
+}
 
 /* ==================================================================
    GROUPS
@@ -1423,8 +1616,8 @@ async function loadGroups() {
   list.innerHTML = `<div style="padding:14px 16px;"><button class="btn btn-primary btn-sm" style="width:100%;" id="newGroupBtn">+ New group</button></div>` +
     (groups.length ? groups.map(g => `
       <div class="group-list-item ${state.activeGroupId === g.id ? 'active' : ''}" data-group-id="${g.id}" data-group-name="${escapeHTML(g.name)}">
-        <div class="group-avatar">${g.photo ? `<img src="${g.photo}">` : initials(g.name)}</div>
-        <div class="who"><div class="name">${escapeHTML(g.name)}</div><div class="last faint">${g.members.length} members</div></div>
+        <div class="group-avatar">${g.photo ? `<img src="${g.photo}" loading="lazy">` : initials(g.name)}</div>
+        <div class="who"><div class="name">${escapeHTML(g.name)} ${isMuted('group', g.id) ? '<svg class="mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>' : ''}</div><div class="last faint">${g.members.length} members</div></div>
       </div>`).join('') : `<div class="empty" style="padding:40px 16px;">No groups yet.</div>`);
   document.getElementById('newGroupBtn').addEventListener('click', openNewGroupModal);
 }
@@ -1436,7 +1629,7 @@ document.getElementById('groupList').addEventListener('click', (e) => {
 
 async function openGroup(id, name) {
   state.activeGroupId = id;
-  state.groupMediaData = null; state.groupMediaType = null;
+  state.groupMediaData = null;
   document.querySelectorAll('.group-list-item').forEach(el => el.classList.toggle('active', Number(el.dataset.groupId) === id));
   const pane = document.getElementById('groupPane');
   pane.innerHTML = `
@@ -1453,8 +1646,8 @@ async function openGroup(id, name) {
     <div class="chat-body" id="groupBody"></div>
     <div class="chat-media-preview" id="groupMediaPreview"></div>
     <div class="chat-input-row">
-      <label class="chat-attach-btn" title="Send photo or video">
-        📎<input type="file" accept="image/*,video/*" id="groupAttachFile" class="hidden">
+      <label class="chat-attach-btn" title="Send a photo">
+        📎<input type="file" accept="image/*" id="groupAttachFile" class="hidden">
       </label>
       <input type="text" id="groupInput" placeholder="Message the group…">
       <button class="btn btn-primary btn-icon" id="groupSendBtn">➤</button>
@@ -1478,29 +1671,37 @@ async function openGroup(id, name) {
 
   const attachInput = document.getElementById('groupAttachFile');
   const mediaPreview = document.getElementById('groupMediaPreview');
-  attachInput.addEventListener('change', async () => {
+  let groupMediaFile = null;
+  attachInput.addEventListener('change', () => {
     if (!attachInput.files[0]) return;
-    const file = attachInput.files[0];
-    state.groupMediaType = file.type.startsWith('video') ? 'video' : 'image';
-    state.groupMediaData = await fileToBase64(file);
-    mediaPreview.style.display = 'block';
-    mediaPreview.innerHTML = (state.groupMediaType === 'video'
-      ? `<video src="${state.groupMediaData}" controls></video>`
-      : `<img src="${state.groupMediaData}">`) + `<button class="rm" id="groupMediaRm">✕</button>`;
-    document.getElementById('groupMediaRm').addEventListener('click', () => {
-      state.groupMediaData = null; state.groupMediaType = null; attachInput.value = '';
-      mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
-    });
+    groupMediaFile = attachInput.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      mediaPreview.style.display = 'block';
+      mediaPreview.innerHTML = `<img src="${reader.result}"><button class="rm" id="groupMediaRm">✕</button>`;
+      document.getElementById('groupMediaRm').addEventListener('click', () => {
+        groupMediaFile = null; attachInput.value = '';
+        mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
+      });
+    };
+    reader.readAsDataURL(groupMediaFile);
   });
 
   const input = document.getElementById('groupInput');
-  const send = () => {
+  const send = async () => {
     const text = input.value.trim();
-    if (!text && !state.groupMediaData) return;
-    state.socket.emit('group:send', { groupId: id, text, media: state.groupMediaData, mediaType: state.groupMediaType });
-    input.value = '';
-    state.groupMediaData = null; state.groupMediaType = null; attachInput.value = '';
-    mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
+    if (!text && !groupMediaFile) return;
+    const sendBtn = document.getElementById('groupSendBtn');
+    sendBtn.disabled = true;
+    try {
+      let mediaUrl = null;
+      if (groupMediaFile) mediaUrl = await uploadPhoto(groupMediaFile);
+      state.socket.emit('group:send', { groupId: id, text, media: mediaUrl });
+      input.value = '';
+      groupMediaFile = null; attachInput.value = '';
+      mediaPreview.style.display = 'none'; mediaPreview.innerHTML = '';
+    } catch (err) { toast(err.message); }
+    sendBtn.disabled = false;
   };
   document.getElementById('groupSendBtn').addEventListener('click', send);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
@@ -1508,7 +1709,7 @@ async function openGroup(id, name) {
 
 document.getElementById('groupPane').addEventListener('click', (e) => {
   const zoomEl = e.target.closest('[data-open-zoom]');
-  if (zoomEl) openLightbox(zoomEl.getAttribute('src'), zoomEl.dataset.zoomKind);
+  if (zoomEl) openLightbox(zoomEl.getAttribute('src'));
 });
 
 async function openNewGroupModal() {
@@ -1558,7 +1759,7 @@ async function openNewGroupModal() {
   });
 }
 
-/* -------- group settings: rename, photo, add/remove members (admin) -------- */
+/* -------- group settings: rename, photo, mute, add/remove members -------- */
 function openGroupSettings(group) {
   if (!group) return;
   const overlay = document.createElement('div');
@@ -1574,8 +1775,12 @@ function openGroupSettings(group) {
         <label class="field">Group name</label>
         <input type="text" id="gsName" value="${escapeHTML(group.name)}" ${group.isAdmin ? '' : 'disabled'}>
       </div>
-      ${group.isAdmin ? `<button class="btn btn-primary btn-sm" id="gsSaveBtn" style="width:100%;margin-bottom:18px;">Save changes</button>` : ''}
-      <label class="field">Members (${group.members.length})</label>
+      ${group.isAdmin ? `<button class="btn btn-primary btn-sm" id="gsSaveBtn" style="width:100%;margin-bottom:10px;">Save changes</button>` : ''}
+      <div class="setting-row">
+        <div><div class="label">Mute notifications</div><div class="desc">Silence alerts &amp; ringtone for this group</div></div>
+        <label class="switch"><input type="checkbox" id="gsMuteToggle" ${isMuted('group', group.id) ? 'checked' : ''}><span class="track"></span></label>
+      </div>
+      <label class="field" style="margin-top:8px;">Members (${group.members.length})</label>
       <div class="member-pick" id="gsMemberList"></div>
       ${group.isAdmin ? `
         <label class="field" style="margin-top:14px;">Add a member</label>
@@ -1586,12 +1791,16 @@ function openGroupSettings(group) {
     </div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('#gsClose').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#gsMuteToggle').addEventListener('change', async (e) => {
+    await toggleMute('group', group.id, e.target.checked);
+    loadGroups();
+  });
 
   function renderMembers(g) {
     overlay.querySelector('#gsMemberList').innerHTML = g.members.map(m => `
       <div class="member-manage-row">
         ${avatarHTML(m, 'sm')}
-        <div class="who"><div class="name">${escapeHTML(m.name)} ${m.isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div><div class="faint mono" style="font-size:11.5px;">@${escapeHTML(m.username)}</div></div>
+        <div class="who"><div class="name">${escapeHTML(m.name)} ${m.isAdmin ? '<span class="admin-badge">Admin</span>' : ''} ${proBadgeHTML(m)}</div><div class="faint mono" style="font-size:11.5px;">@${escapeHTML(m.username)}</div></div>
         ${g.isAdmin && m.id !== state.me.id ? `
           ${!m.isAdmin ? `<button class="btn btn-sm" data-make-admin="${m.id}">Make admin</button>` : ''}
           <button class="btn btn-sm btn-danger" data-remove-member="${m.id}">Remove</button>
@@ -1618,22 +1827,28 @@ function openGroupSettings(group) {
   });
 
   if (group.isAdmin) {
-    let newPhoto = null;
+    let newPhotoFile = null;
     const photoInput = overlay.querySelector('#gsPhotoFile');
-    if (photoInput) photoInput.addEventListener('change', async (e) => {
+    if (photoInput) photoInput.addEventListener('change', (e) => {
       if (!e.target.files[0]) return;
-      newPhoto = await fileToBase64(e.target.files[0]);
-      overlay.querySelector('#gsAvatarPreview').innerHTML = `<img src="${newPhoto}">`;
+      newPhotoFile = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = () => { overlay.querySelector('#gsAvatarPreview').innerHTML = `<img src="${reader.result}">`; };
+      reader.readAsDataURL(newPhotoFile);
     });
     overlay.querySelector('#gsSaveBtn').addEventListener('click', async () => {
+      const saveBtn = overlay.querySelector('#gsSaveBtn');
+      saveBtn.disabled = true;
       try {
         const name = overlay.querySelector('#gsName').value.trim();
-        const g = await api(`/groups/${group.id}`, { method: 'PUT', body: { name, photo: newPhoto } });
+        let photoUrl = null;
+        if (newPhotoFile) photoUrl = await uploadPhoto(newPhotoFile);
+        const g = await api(`/groups/${group.id}`, { method: 'PUT', body: { name, photo: photoUrl } });
         toast('Group updated.');
         loadGroups();
         document.getElementById('groupPane') && openGroup(group.id, g.name);
         overlay.remove();
-      } catch (err) { toast(err.message); }
+      } catch (err) { toast(err.message); saveBtn.disabled = false; }
     });
     let addDeb;
     overlay.querySelector('#gsAddSearch').addEventListener('input', (e) => {
@@ -1675,7 +1890,28 @@ async function loadSettings() {
     if (el.type === 'checkbox') el.checked = !!val;
     else el.value = val;
   });
+  updatePremiumUI();
+  applyAccentColor(me.settings.accentColor);
 }
+function updatePremiumUI() {
+  const isPremium = state.me.settings.accountType === 'premium';
+  document.getElementById('accountTypeDesc').textContent = isPremium ? 'Premium account ★' : 'Free account';
+  const btn = document.getElementById('togglePremiumBtn');
+  btn.textContent = isPremium ? 'Manage / Downgrade' : 'Go Premium';
+  btn.classList.toggle('btn-gold', !isPremium);
+  btn.classList.toggle('btn-danger', isPremium);
+}
+document.getElementById('togglePremiumBtn').addEventListener('click', async () => {
+  const isPremium = state.me.settings.accountType === 'premium';
+  const next = isPremium ? 'free' : 'premium';
+  if (isPremium && !confirm('Downgrade to a free account? You will lose your premium badge and priority inbox.')) return;
+  try {
+    const settings = await api('/settings', { method: 'PUT', body: { accountType: next } });
+    state.me = { ...state.me, settings };
+    updatePremiumUI();
+    toast(next === 'premium' ? 'Welcome to Premium! ★' : 'Switched back to a free account.');
+  } catch (err) { toast(err.message); }
+});
 document.querySelectorAll('[data-setting]').forEach(el => {
   el.addEventListener('change', async () => {
     const key = el.dataset.setting;
@@ -1683,10 +1919,13 @@ document.querySelectorAll('[data-setting]').forEach(el => {
     try {
       const settings = await api('/settings', { method: 'PUT', body: { [key]: value } });
       state.me = { ...state.me, settings };
+      if (key === 'accentColor') applyAccentColor(value);
       toast('Setting saved.');
     } catch (err) { toast(err.message); }
   });
 });
+
+document.getElementById('notifPermRow').addEventListener('click', requestNotifPermission);
 
 document.getElementById('blockedAccountsRow').addEventListener('click', openBlockedAccounts);
 async function openBlockedAccounts() {
@@ -1730,10 +1969,9 @@ function connectSocket() {
     if (state.activeConvUserId === msg.sender_id && state.view === 'chat') {
       const body = document.getElementById('chatBody');
       if (body) { body.insertAdjacentHTML('beforeend', bubbleHTML(msg)); body.scrollTop = body.scrollHeight; }
-    } else {
-      toast('New message received.');
     }
     if (state.view === 'chat') loadConversations();
+    if (!isMuted('conv', msg.sender_id)) pushNotify('New message', msg.text || '📷 Photo', { tag: 'dm-' + msg.sender_id });
   });
   state.socket.on('dm:sent', (msg) => {
     if (state.activeConvUserId === msg.receiver_id) {
@@ -1755,6 +1993,7 @@ function connectSocket() {
       const body = document.getElementById('groupBody');
       if (body) { body.insertAdjacentHTML('beforeend', bubbleHTML(msg)); body.scrollTop = body.scrollHeight; }
     }
+    if (msg.sender_id !== state.me.id && !isMuted('group', msg.group_id)) pushNotify('New group message', msg.text || '📷 Photo', { tag: 'group-' + msg.group_id });
   });
   state.socket.on('group:updated', (g) => {
     if (state.view === 'groups') loadGroups();
@@ -1766,9 +2005,9 @@ function connectSocket() {
   });
 
   state.socket.on('notification', (n) => {
-    if (n.type === 'like') toast(`${n.from.name || n.from.username} liked your entry.`);
-    if (n.type === 'comment') toast(`${n.from.name || n.from.username} commented on your entry.`);
-    if (n.type === 'follow') toast(`${n.from.name || n.from.username} started following you.`);
+    if (n.type === 'like') pushNotify('New like', `${n.from.name || n.from.username} liked your entry.`);
+    if (n.type === 'comment') pushNotify('New comment', `${n.from.name || n.from.username} commented on your entry.`);
+    if (n.type === 'follow') pushNotify('New follower', `${n.from.name || n.from.username} started following you.`);
   });
 
   state.socket.on('error_msg', (e) => toast(e.error));
@@ -1778,13 +2017,14 @@ function connectSocket() {
   state.socket.on('call:answered', async ({ answer }) => {
     await state.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
     setCallStatus('Connected');
+    stopRingtone();
     startCallTimer();
   });
   state.socket.on('call:ice', ({ candidate }) => {
     if (state.peerConnection && candidate) state.peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
   });
-  state.socket.on('call:declined', () => { toast('Call declined.'); endCall(false); });
-  state.socket.on('call:ended', () => { toast('Call ended.'); endCall(false); });
+  state.socket.on('call:declined', () => { toast('Call declined.'); stopRingtone(); endCall(false); });
+  state.socket.on('call:ended', () => { toast('Call ended.'); stopRingtone(); endCall(false); });
   state.socket.on('call:peer_mute', ({ muted }) => setCallStatus(muted ? 'They muted their mic' : 'Connected'));
   state.socket.on('call:peer_video_toggle', ({ videoOn }) => setCallStatus(videoOn ? 'Connected' : 'Their video is off'));
 }
@@ -1815,6 +2055,7 @@ async function startCall(user, kind) {
 }
 
 function showIncomingCall(fromId, fromUser, kind, offer) {
+  startRingtone();
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.id = 'incomingCallOverlay';
@@ -1830,10 +2071,12 @@ function showIncomingCall(fromId, fromUser, kind, offer) {
     </div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('#declineCallBtn').addEventListener('click', () => {
+    stopRingtone();
     state.socket.emit('call:decline', { to: fromId });
     overlay.remove();
   });
   overlay.querySelector('#acceptCallBtn').addEventListener('click', async () => {
+    stopRingtone();
     overlay.remove();
     await acceptCall(fromId, fromUser, kind, offer);
   });
@@ -1920,6 +2163,7 @@ function startCallTimer() {
   }, 1000);
 }
 function endCall() {
+  stopRingtone();
   if (state.peerConnection) { state.peerConnection.close(); state.peerConnection = null; }
   if (state.localStream) { state.localStream.getTracks().forEach(t => t.stop()); state.localStream = null; }
   clearInterval(state.callTimerInterval);
@@ -1954,9 +2198,16 @@ async function boot() {
   document.getElementById('authView').style.display = 'none';
   document.getElementById('appView').classList.add('active');
   renderRailAvatar();
+  applyAccentColor(state.me.settings.accentColor);
   connectSocket();
-  showView('feed');
+  setupFeedObserver();
+  showView('feed', { skipReload: true });
+  loadFeed(true);
   loadConversations();
+  if (state.me.settings.pushNotifications && 'Notification' in window && Notification.permission === 'default') {
+    // Ask once, quietly, after the app is actually usable.
+    setTimeout(() => Notification.requestPermission().then(refreshNotifPermRow), 1200);
+  }
 }
 boot();
 </script>
