@@ -8,42 +8,55 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ====== DARK theme is the default palette; LIGHT overrides live in
+     [data-theme="light"]. Toggled for real now by the "Dark mode"
+     setting — previously this setting existed but nothing read it. */
   :root{
-    --ink-900:#fafafa;
-    --ink-850:#ffffff;
-    --ink-800:#fafafa;
-    --ink-700:#efefef;
-    --ink-650:#dbdbdb;
-    --line:#dbdbdb;
-    --line-soft:#efefef;
-    --paper:#262626;
-    --paper-dim:#737373;
-    --paper-faint:#c7c7c7;
+    --ink-900:#14151b;
+    --ink-850:#1a1b22;
+    --ink-800:#1c1d25;
+    --ink-700:#262832;
+    --ink-650:#34364280;
+    --line:#333542;
+    --line-soft:#24262f;
+    --paper:#f2f2f6;
+    --paper-dim:#a7a8b5;
+    --paper-faint:#6d6f7d;
     --amber:#0095f6;
-    --amber-bright:#1877f2;
-    --amber-soft:rgba(0,149,246,.10);
-    --rose:#d6e831;
-    --rose-soft:rgba(237,73,86,.10);
+    --amber-bright:#3fb0ff;
+    --amber-soft:rgba(0,149,246,.16);
+    --rose:#ef4d63;
+    --rose-soft:rgba(239,77,99,.14);
     --green:#2ecc71;
     --gold:#e0a72e;
-    --gold-soft:rgba(224,167,46,.14);
-    --shadow: 0 8px 32px rgba(0,0,0,.10);
+    --gold-soft:rgba(224,167,46,.16);
+    --tick-read:#34b7f1;
+    --shadow: 0 8px 32px rgba(0,0,0,.35);
     --radius: 12px;
-    --glass:rgba(255,255,255,.68);
-    --glass-strong:rgba(255,255,255,.85);
-    --glass-border:rgba(255,255,255,.6);
+    --glass:rgba(28,29,37,.72);
+    --glass-strong:rgba(24,25,32,.9);
+    --glass-border:rgba(255,255,255,.08);
     --ig-gradient: linear-gradient(45deg,#f9ce34 0%,#ee2a7b 45%,#46c4ef 100%);
     --vh100: 100vh;
+    --page-bg-1: rgba(249,206,52,.10);
+    --page-bg-2: rgba(238,42,123,.08);
+    --page-bg-3: rgba(98,40,215,.10);
+  }
+  #phoneFrame[data-theme="light"]{
+    --ink-900:#fafafa; --ink-850:#ffffff; --ink-800:#fafafa; --ink-700:#efefef; --ink-650:#dbdbdb;
+    --line:#dbdbdb; --line-soft:#efefef; --paper:#262626; --paper-dim:#737373; --paper-faint:#c7c7c7;
+    --amber:#0095f6; --amber-bright:#1877f2; --amber-soft:rgba(0,149,246,.10);
+    --rose:#d6202f; --rose-soft:rgba(214,32,47,.10); --green:#2ecc71; --gold:#b9852a; --gold-soft:rgba(224,167,46,.14);
+    --tick-read:#0095f6;
+    --shadow: 0 8px 32px rgba(0,0,0,.10);
+    --glass:rgba(255,255,255,.68); --glass-strong:rgba(255,255,255,.85); --glass-border:rgba(255,255,255,.6);
+    --page-bg-1: rgba(249,206,52,.22); --page-bg-2: rgba(238,42,123,.16); --page-bg-3: rgba(98,40,215,.14);
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
     margin:0;
-    background:
-      radial-gradient(900px 560px at 8% -8%, rgba(249,206,52,.22), transparent 55%),
-      radial-gradient(900px 560px at 88% 6%, rgba(238,42,123,.16), transparent 55%),
-      radial-gradient(1000px 640px at 50% 105%, rgba(98,40,215,.14), transparent 55%),
-      var(--ink-900);
+    background: var(--ink-900);
     background-attachment:fixed;
     color:var(--paper);
     font-family:'Inter',system-ui,sans-serif;
@@ -123,9 +136,9 @@
   #phoneFrame{
     width:100%; max-width:480px; min-height:var(--vh100); position:relative;
     background:
-      radial-gradient(900px 560px at 8% -8%, rgba(249,206,52,.22), transparent 55%),
-      radial-gradient(900px 560px at 88% 6%, rgba(238,42,123,.16), transparent 55%),
-      radial-gradient(1000px 640px at 50% 105%, rgba(98,40,215,.14), transparent 55%),
+      radial-gradient(900px 560px at 8% -8%, var(--page-bg-1), transparent 55%),
+      radial-gradient(900px 560px at 88% 6%, var(--page-bg-2), transparent 55%),
+      radial-gradient(1000px 640px at 50% 105%, var(--page-bg-3), transparent 55%),
       var(--ink-900);
     box-shadow: 0 0 0 1px var(--line-soft);
     overflow:hidden;
@@ -169,7 +182,7 @@
     justify-content:space-between; padding:0 16px; background:var(--glass);
     backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); position:sticky; top:0; z-index:40;
   }
-  .topbar h2{ font-size:17px; font-weight:600; margin:0; }
+  .topbar h2{ font-size:17px; font-weight:600; margin:0; display:flex; align-items:center; gap:6px; }
   .view-scroll{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; padding-bottom:70px; }
   .page{ max-width:640px; margin:0 auto; padding:18px 16px 24px; }
   .page.wide{ max-width:920px; }
@@ -183,7 +196,10 @@
   }
   @keyframes slideIn{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
 
-  /* ---------------- rail / bottom tab bar ---------------- */
+  /* ---------------- rail / bottom tab bar — Instagram-style order:
+     Home · Search · Create(+) · Messages · Profile. Groups now lives
+     inside Messages as a tab, and Settings lives inside Profile
+     (gear icon), matching where Instagram actually puts them. ------ */
   .rail{
     flex-shrink:0; width:100%; height:auto;
     display:flex; flex-direction:row; justify-content:space-around; align-items:center;
@@ -202,10 +218,12 @@
     position:absolute; top:2px; right:2px; background:var(--rose); color:#fff; font-size:10px; font-weight:700;
     min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px;
   }
+  .rail-compose svg{ width:25px; height:25px; }
   .rail-self{ cursor:pointer; }
   .rail-self .avatar{ width:28px; height:28px; font-size:12px; }
+  .rail-self.active .avatar{ box-shadow:0 0 0 2px var(--amber); }
 
-  #view-chat.page, #view-groups.page{ height:100%; }
+  #view-chat.page{ height:100%; }
 
   /* ---------------- composer / feed ---------------- */
   .composer{
@@ -272,6 +290,14 @@
   .share-sheet-row:last-child{ border-bottom:none; }
   .share-sheet-row .name{ font-size:14px; font-weight:600; }
 
+  /* ---------------- compose action sheet ---------------- */
+  .compose-option{ display:flex; align-items:center; gap:14px; padding:14px 6px; cursor:pointer; border-bottom:1px solid var(--line-soft); }
+  .compose-option:last-child{ border-bottom:none; }
+  .compose-option .ico{ width:42px; height:42px; border-radius:12px; background:var(--amber-soft); color:var(--amber); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .compose-option .ico svg{ width:20px; height:20px; }
+  .compose-option .label{ font-weight:600; font-size:14.5px; }
+  .compose-option .desc{ font-size:12.5px; color:var(--paper-faint); }
+
   /* ---------------- search ---------------- */
   .search-box{ position:relative; margin-bottom:4px; }
   .search-box svg{ position:absolute; left:14px; top:50%; transform:translateY(-50%); width:17px; height:17px; color:var(--paper-faint); }
@@ -306,14 +332,18 @@
   .media-grid .cell{ aspect-ratio:1/1; background:var(--ink-700); position:relative; overflow:hidden; cursor:pointer; }
   .media-grid .cell img{ width:100%; height:100%; object-fit:cover; }
 
-  /* ---------------- chat ---------------- */
+  /* ---------------- chat (messages tab: Chats / Groups) ---------------- */
+  .chat-tabs{ display:flex; gap:0; border-bottom:1px solid var(--glass-border); background:var(--glass); backdrop-filter:blur(20px); flex-shrink:0; }
+  .chat-tab{ flex:1; text-align:center; padding:12px 0; background:none; border:none; color:var(--paper-faint); font-weight:700; font-size:13.5px; border-bottom:2px solid transparent; cursor:pointer; }
+  .chat-tab.active{ color:var(--paper); border-bottom-color:var(--amber); }
+  .messages-body{ flex:1; min-height:0; position:relative; }
   .split{ display:flex; height:100%; position:relative; overflow:hidden; }
   .conv-list{ width:100%; position:absolute; inset:0; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); overflow-y:auto; -webkit-overflow-scrolling:touch; transition:transform .22s ease; z-index:2; }
   .conv-item{ display:flex; gap:11px; align-items:center; padding:13px 16px; cursor:pointer; border-bottom:1px solid var(--line-soft); }
   .conv-item:hover, .conv-item.active{ background:var(--ink-800); }
   .conv-item .who{ flex:1; min-width:0; }
   .conv-item .name{ font-size:14px; font-weight:600; display:flex; align-items:center; gap:5px; }
-  .conv-item .last{ font-size:12.5px; color:var(--paper-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px; }
+  .conv-item .last{ font-size:12.5px; color:var(--paper-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px; display:flex; align-items:center; gap:4px; }
   .conv-unread{ background:var(--amber); color:#fff; font-size:11px; font-weight:700; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
   .mute-icon{ width:13px; height:13px; color:var(--paper-faint); flex-shrink:0; }
 
@@ -337,7 +367,10 @@
   .bubble.shared-post .sp-media{ width:100%; aspect-ratio:1/1; background:#0c0d12; }
   .bubble.shared-post .sp-media img{ width:100%; height:100%; object-fit:cover; }
   .bubble.shared-post .sp-body{ padding:8px 10px; font-size:12.5px; }
-  .bubble-time{ font-size:10.5px; color:var(--paper-faint); margin-top:3px; padding:0 4px; }
+  .bubble-meta{ display:flex; align-items:center; gap:4px; margin-top:3px; padding:0 4px; }
+  .bubble-time{ font-size:10.5px; color:var(--paper-faint); }
+  .tick{ width:15px; height:15px; flex-shrink:0; color:var(--paper-faint); }
+  .tick.tick-read{ color:var(--tick-read); }
   .typing-indicator{ font-size:12.5px; color:var(--paper-faint); padding:0 14px 6px; font-style:italic; height:16px; flex-shrink:0; }
   .chat-input-row{ padding:10px 12px; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-top:1px solid var(--glass-border); display:flex; gap:8px; flex-shrink:0; align-items:center; }
   .chat-input-row input[type=text]{ border-radius:22px; padding:11px 16px; font-size:16px; }
@@ -366,6 +399,8 @@
   .settings-section h3{ font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--paper-faint); margin:0 0 10px; font-weight:600; font-family:'Inter'; }
   .settings-section.premium{ border:1px solid var(--gold-soft); border-radius:14px; padding:14px 16px 4px; background:linear-gradient(180deg, rgba(224,167,46,.06), transparent); }
   .settings-section.premium h3{ color:var(--gold); }
+  .premium-progress{ height:6px; border-radius:4px; background:var(--ink-700); overflow:hidden; margin-top:8px; }
+  .premium-progress-fill{ height:100%; background:var(--gold); transition:width .3s ease; }
   .setting-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line-soft); gap:20px; }
   .setting-row:last-child{ border-bottom:none; }
   .setting-row .label{ font-size:14.5px; font-weight:500; }
@@ -416,7 +451,7 @@
 </style>
 </head>
 <body>
-<div id="phoneFrame">
+<div id="phoneFrame" data-theme="dark">
 
 <!-- ================= AUTH ================= -->
 <div id="authView">
@@ -492,31 +527,33 @@
         <div id="profileContent"></div>
       </section>
 
-      <!-- CHAT -->
+      <!-- MESSAGES (Chats + Groups tabs, Instagram/WhatsApp style) -->
       <section id="view-chat" class="page full hidden">
-        <div class="split">
-          <div class="conv-list" id="convList"></div>
-          <div class="chat-pane" id="chatPane">
-            <div class="empty-chat">Pick a conversation, or search for someone to message.</div>
-          </div>
+        <div class="chat-tabs">
+          <button class="chat-tab active" data-chattab="dm">Chats</button>
+          <button class="chat-tab" data-chattab="groups">Groups</button>
         </div>
-      </section>
-
-      <!-- GROUPS -->
-      <section id="view-groups" class="page full hidden">
-        <div class="split">
-          <div class="conv-list" id="groupList">
-            <div style="padding:14px 16px;">
-              <button class="btn btn-primary btn-sm" style="width:100%;" id="newGroupBtn">+ New group</button>
+        <div class="messages-body">
+          <div class="split" id="dmSplit">
+            <div class="conv-list" id="convList"></div>
+            <div class="chat-pane" id="chatPane">
+              <div class="empty-chat">Pick a conversation, or search for someone to message.</div>
             </div>
           </div>
-          <div class="chat-pane" id="groupPane">
-            <div class="empty-chat">Select a group, or create a new one.</div>
+          <div class="split hidden" id="groupSplitWrap">
+            <div class="conv-list" id="groupList">
+              <div style="padding:14px 16px;">
+                <button class="btn btn-primary btn-sm" style="width:100%;" id="newGroupBtn">+ New group</button>
+              </div>
+            </div>
+            <div class="chat-pane" id="groupPane">
+              <div class="empty-chat">Select a group, or create a new one.</div>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- SETTINGS -->
+      <!-- SETTINGS (reached via the gear icon on your own profile) -->
       <section id="view-settings" class="page hidden">
 
         <div class="settings-section premium">
@@ -524,6 +561,10 @@
           <div class="setting-row">
             <div><div class="label">Account type</div><div class="desc" id="accountTypeDesc">Free account</div></div>
             <button class="btn btn-sm btn-gold" id="togglePremiumBtn">Go Premium</button>
+          </div>
+          <div id="premiumGateNote" class="hidden" style="padding-bottom:14px;">
+            <div class="desc" id="premiumGateText"></div>
+            <div class="premium-progress"><div class="premium-progress-fill" id="premiumProgressFill" style="width:0%;"></div></div>
           </div>
           <div class="setting-row">
             <div><div class="label">Accent color</div><div class="desc">Personalize buttons &amp; highlights across the app</div></div>
@@ -558,7 +599,7 @@
             <label class="switch"><input type="checkbox" data-setting="showActivityStatus"><span class="track"></span></label>
           </div>
           <div class="setting-row">
-            <div><div class="label">Read receipts</div><div class="desc">Show when you've seen a message</div></div>
+            <div><div class="label">Read receipts</div><div class="desc">Show blue "seen" ticks — turning this off also hides others' ticks from you</div></div>
             <label class="switch"><input type="checkbox" data-setting="readReceipts"><span class="track"></span></label>
           </div>
           <div class="setting-row">
@@ -606,7 +647,7 @@
         <div class="settings-section">
           <h3>Appearance &amp; data</h3>
           <div class="setting-row">
-            <div><div class="label">Dark mode</div><div class="desc">This diary is dark-mode by design — toggle for a lighter feel later</div></div>
+            <div><div class="label">Dark mode</div><div class="desc">Switch between the dark and light theme</div></div>
             <label class="switch"><input type="checkbox" data-setting="darkMode"><span class="track"></span></label>
           </div>
           <div class="setting-row">
@@ -636,24 +677,22 @@
     </div>
   </div>
 
+  <!-- Instagram-style order: Home · Search · Create(+) · Messages · Profile -->
   <nav class="rail">
-    <button class="rail-btn active" data-view="feed" title="Feed">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
+    <button class="rail-btn active" data-view="feed" title="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
     </button>
     <button class="rail-btn" data-view="search" title="Search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
     </button>
-    <button class="rail-btn" data-view="chat" title="Chat">
+    <button class="rail-btn rail-compose" id="composeBtn" title="Create">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+    </button>
+    <button class="rail-btn" data-view="chat" title="Messages">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
       <span class="badge hidden" id="chatBadge">0</span>
     </button>
-    <button class="rail-btn" data-view="groups" title="Groups">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    </button>
-    <button class="rail-btn" data-view="settings" title="Settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-    </button>
-    <div class="avatar sm rail-self" id="railAvatar" data-view="profile-self" title="Your profile"></div>
+    <div class="avatar sm rail-self" id="railAvatar" data-view="profile-self" title="Profile"></div>
   </nav>
 </div>
 
@@ -664,13 +703,20 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 /* ==================================================================
+   GLOBAL ERROR SAFETY NET
+   Turns otherwise-silent WebRTC/network failures into a visible
+   toast instead of only a red line in devtools, so problems are
+   actually noticeable in normal use ("some logs are coming").
+   ================================================================== */
+window.addEventListener('unhandledrejection', (e) => {
+  console.warn('Unhandled promise rejection:', e.reason);
+});
+window.addEventListener('error', (e) => {
+  console.warn('Runtime error:', e.message);
+});
+
+/* ==================================================================
    MOBILE VIEWPORT HEIGHT FIX
-   iOS/Android address-bar show/hide used to make 100vh taller than
-   the visible area, which is what made the feed look like it
-   "wouldn't scroll" (the bottom nav + composer pushed the last
-   posts under the browser chrome). We measure the real visible
-   height with window.innerHeight / visualViewport and keep a CSS
-   var in sync, recalculated on resize/orientation change.
    ================================================================== */
 function setRealViewportHeight() {
   const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
@@ -689,6 +735,7 @@ const state = {
   me: null,
   socket: null,
   view: 'feed',
+  chatTab: 'dm',
   activeConvUserId: null,
   activeGroupId: null,
   peerConnection: null,
@@ -699,6 +746,10 @@ const state = {
   callVideoOn: true,
   callStartedAt: null,
   callTimerInterval: null,
+  callRingTimeout: null,
+  pendingCandidates: [],           // ICE candidates that arrived before the
+                                    // peer connection / remote description
+                                    // existed — buffered instead of dropped.
   onlineUserIds: new Set(),
   chatMediaData: null,
   groupMediaData: null,
@@ -723,9 +774,6 @@ async function api(path, opts = {}) {
   return data;
 }
 
-// Upload a photo file to disk via multipart/form-data and get back
-// a short URL — this replaces sending base64 blobs in JSON, which
-// was the main reason posts/chats/profile loaded slowly before.
 async function uploadPhoto(file) {
   const fd = new FormData();
   fd.append('photo', file);
@@ -791,12 +839,28 @@ function applyAccentColor(hex) {
   if (!hex) return;
   document.documentElement.style.setProperty('--amber', hex);
 }
+// Actually apply the dark/light theme — previously this setting was
+// stored but nothing in the CSS ever branched on it.
+function applyTheme(isDark) {
+  document.getElementById('phoneFrame').dataset.theme = isDark ? 'dark' : 'light';
+}
 
 /* ==================================================================
-   NOTIFICATIONS — Web Notification API + a synthesized ringtone
-   (built with the Web Audio API, so no external sound file is
-   needed and it loads instantly). Respects the pushNotifications /
-   notificationSound settings and any muted conversations/groups.
+   WHATSAPP-STYLE MESSAGE TICKS
+   single gray check = sent, double gray = delivered, double blue = seen.
+   ================================================================== */
+const TICK_SINGLE = '<svg class="tick" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8l4 4 8-9"/></svg>';
+const TICK_DOUBLE = '<svg class="tick" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8l3.2 3.2L11 4.4"/><path d="M5.5 8l3.2 3.2L15.5 4.4"/></svg>';
+const TICK_DOUBLE_READ = '<svg class="tick tick-read" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8l3.2 3.2L11 4.4"/><path d="M5.5 8l3.2 3.2L15.5 4.4"/></svg>';
+function tickHTML(m) {
+  if (!m || m.sender_id !== state.me.id || m.group_id) return '';
+  if (m.is_read) return TICK_DOUBLE_READ;
+  if (m.is_delivered) return TICK_DOUBLE;
+  return TICK_SINGLE;
+}
+
+/* ==================================================================
+   NOTIFICATIONS — Web Notification API + a synthesized ringtone.
    ================================================================== */
 let audioCtx = null;
 function beep({ freq = 880, duration = 0.14, type = 'sine', gain = 0.18, delay = 0 } = {}) {
@@ -839,8 +903,7 @@ function refreshNotifPermRow() {
 function pushNotify(title, body, { sound = true, tag } = {}) {
   if (!state.me?.settings?.pushNotifications) return;
   if (sound) playMessageChime();
-  if (document.visibilityState === 'visible' && state.view !== 'chat' && state.view !== 'groups') {
-    // still surface an in-app toast even when the tab is focused
+  if (document.visibilityState === 'visible' && state.view !== 'chat') {
     toast(title + (body ? ' — ' + body : ''));
   }
   if ('Notification' in window && Notification.permission === 'granted') {
@@ -902,31 +965,39 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 });
 
 /* ==================================================================
-   NAV / VIEW ROUTING
+   NAV / VIEW ROUTING — Instagram-style rail: Home, Search, Create(+),
+   Messages, Profile. Settings lives inside Profile (gear icon).
    ================================================================== */
-const titles = { feed: 'Your Feed', search: 'Search', profile: 'Profile', chat: 'Messages', groups: 'Groups', settings: 'Settings' };
+const titles = { feed: 'Your Feed', search: 'Search', profile: 'Profile', chat: 'Messages', settings: 'Settings' };
 
 document.querySelectorAll('.rail-btn[data-view]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const v = btn.dataset.view;
-    if (v === 'profile-self') return showProfile(state.me.username);
-    showView(v);
-  });
+  btn.addEventListener('click', () => showView(btn.dataset.view));
 });
 document.getElementById('railAvatar').addEventListener('click', () => showProfile(state.me.username));
+document.getElementById('composeBtn').addEventListener('click', openComposeSheet);
 
 function showView(view, opts = {}) {
   state.view = view;
   document.querySelectorAll('.rail-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  document.getElementById('railAvatar').classList.toggle('active', view === 'profile' && opts.self);
   document.querySelectorAll('#viewScroll > section').forEach(s => s.classList.add('hidden'));
   document.getElementById('view-' + view).classList.remove('hidden');
   document.getElementById('topbarTitle').textContent = opts.title || titles[view] || '';
   if (view === 'feed' && !opts.skipReload) loadFeed(true);
   if (view === 'search') document.getElementById('searchInput').focus();
-  if (view === 'chat') { loadConversations(); closeMobilePane('chat'); }
-  if (view === 'groups') { loadGroups(); closeMobilePane('groups'); }
+  if (view === 'chat') { switchChatTab(state.chatTab); }
   if (view === 'settings') { loadSettings(); refreshNotifPermRow(); }
 }
+
+function switchChatTab(tab) {
+  state.chatTab = tab;
+  document.querySelectorAll('.chat-tab').forEach(t => t.classList.toggle('active', t.dataset.chattab === tab));
+  document.getElementById('dmSplit').classList.toggle('hidden', tab !== 'dm');
+  document.getElementById('groupSplitWrap').classList.toggle('hidden', tab !== 'groups');
+  if (tab === 'dm') { loadConversations(); closeMobilePane('chat'); }
+  else { loadGroups(); closeMobilePane('groups'); }
+}
+document.querySelectorAll('.chat-tab').forEach(t => t.addEventListener('click', () => switchChatTab(t.dataset.chattab)));
 
 function closeMobilePane(kind) {
   if (kind === 'chat') {
@@ -947,11 +1018,41 @@ function openMobilePane(kind) {
   }
 }
 
+/* -------- "+" create action sheet (Instagram-style compose hub) -------- */
+function openComposeSheet() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Create</h3>
+      <div class="compose-option" id="composeNewPost">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <div><div class="label">New entry</div><div class="desc">Write a diary post, with an optional photo</div></div>
+      </div>
+      <div class="compose-option" id="composeNewGroup">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div><div class="label">New group</div><div class="desc">Start a group chat with a few people</div></div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="composeCancel">Cancel</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#composeCancel').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#composeNewPost').addEventListener('click', () => {
+    overlay.remove();
+    showView('feed');
+    setTimeout(() => document.getElementById('postText').focus(), 150);
+  });
+  overlay.querySelector('#composeNewGroup').addEventListener('click', () => {
+    overlay.remove();
+    openNewGroupModal();
+  });
+}
+
 /* ==================================================================
    FEED — infinite scroll, photo-only composer, single upload call
    ================================================================== */
 const composerFile = document.getElementById('composerFile');
-let composerImageData = null; // local preview (data URL) until upload
+let composerImageData = null;
 let composerImageFile = null;
 
 function setComposerMedia(file) {
@@ -1017,9 +1118,6 @@ async function loadFeed(reset) {
   state.feedLoading = false;
 }
 
-// IntersectionObserver-driven infinite scroll — much lighter than a
-// scroll-event listener and only fires the network call when the
-// sentinel actually enters view.
 function setupFeedObserver() {
   if (state.feedObserver) state.feedObserver.disconnect();
   state.feedObserver = new IntersectionObserver((entries) => {
@@ -1276,6 +1374,7 @@ searchResultsEl.addEventListener('click', (e) => {
   if (gotoProfile) return showProfile(gotoProfile.dataset.gotoProfile);
   if (msgBtn) {
     showView('chat');
+    switchChatTab('dm');
     openChatWith({ id: Number(msgBtn.dataset.messageUser), username: msgBtn.dataset.messageUsername, name: msgBtn.dataset.messageName });
   }
 });
@@ -1284,7 +1383,8 @@ searchResultsEl.addEventListener('click', (e) => {
    PROFILE
    ================================================================== */
 async function showProfile(username) {
-  showView('profile', { title: 'Profile' });
+  const self = state.me && username === state.me.username;
+  showView('profile', { title: 'Profile', self });
   const box = document.getElementById('profileContent');
   box.innerHTML = '<div class="empty">Loading…</div>';
   try {
@@ -1306,7 +1406,10 @@ async function showProfile(username) {
         <div class="stat"><b>${u.following}</b><span>Following</span></div>
       </div>
       <div class="profile-actions">
-        ${u.isMe ? `<button class="btn btn-sm" id="editProfileBtn">Edit profile</button>` : `
+        ${u.isMe ? `<button class="btn btn-sm" id="editProfileBtn">Edit profile</button>
+          <button class="btn btn-icon" id="openSettingsBtn" title="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          </button>` : `
           <button class="btn btn-sm ${u.isFollowing ? '' : 'btn-primary'}" id="followBtn" data-uid="${u.id}" data-following="${u.isFollowing}">${u.isFollowing ? 'Following' : 'Follow'}</button>
           <button class="btn btn-sm" id="msgProfileBtn" data-uid="${u.id}" data-uname="${escapeHTML(u.username)}" data-name="${escapeHTML(u.name)}">Message</button>
           <button class="btn btn-sm btn-danger" id="blockBtn" data-uid="${u.id}" data-blocked="${u.isBlocked}">${u.isBlocked ? 'Unblock' : 'Block'}</button>
@@ -1341,6 +1444,7 @@ async function showProfile(username) {
 
     if (u.isMe) {
       document.getElementById('editProfileBtn').addEventListener('click', () => openEditProfile(u));
+      document.getElementById('openSettingsBtn').addEventListener('click', () => showView('settings'));
     } else {
       document.getElementById('followBtn').addEventListener('click', async (e) => {
         const btn = e.target;
@@ -1351,7 +1455,7 @@ async function showProfile(username) {
         } catch (err) { toast(err.message); }
       });
       document.getElementById('msgProfileBtn').addEventListener('click', () => {
-        showView('chat');
+        showView('chat'); switchChatTab('dm');
         openChatWith({ id: u.id, username: u.username, name: u.name });
       });
       document.getElementById('blockBtn').addEventListener('click', async (e) => {
@@ -1420,7 +1524,7 @@ async function loadConversations() {
       return `
       <div class="conv-item ${state.activeConvUserId === c.user.id ? 'active' : ''}" data-conv-uid="${c.user.id}" data-conv-uname="${escapeHTML(c.user.username)}" data-conv-name="${escapeHTML(c.user.name)}">
         <div class="avatar-wrap">${avatarHTML(c.user)}${c.user.isOnline ? '<span class="dot online"></span>' : ''}</div>
-        <div class="who"><div class="name">${escapeHTML(c.user.name)} ${proBadgeHTML(c.user)} ${muted ? '<svg class="mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>' : ''}</div><div class="last">${lastMessagePreview(c.lastMessage)}</div></div>
+        <div class="who"><div class="name">${escapeHTML(c.user.name)} ${proBadgeHTML(c.user)} ${muted ? '<svg class="mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>' : ''}</div><div class="last">${c.lastMessage && c.lastMessage.sender_id === state.me.id ? tickHTML(c.lastMessage) : ''} ${lastMessagePreview(c.lastMessage)}</div></div>
         ${c.unread ? `<span class="conv-unread">${c.unread}</span>` : ''}
       </div>`;
     }).join('') : `<div class="empty" style="padding:40px 16px;">No messages yet. Search for someone to say hi.</div>`;
@@ -1543,15 +1647,15 @@ function bubbleHTML(m) {
   const mine = m.sender_id === state.me.id;
   if (m.shared_post_id && m.shared_post) {
     const sp = m.shared_post;
-    return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble shared-post" data-goto-post="${sp.id}">
+    return `<div class="bubble-row ${mine ? 'me' : 'them'}" data-msg-id="${m.id}"><div><div class="bubble shared-post" data-goto-post="${sp.id}">
       ${sp.image ? `<div class="sp-media"><img src="${sp.image}" loading="lazy"></div>` : ''}
       <div class="sp-body"><b>${escapeHTML(sp.author.name)}</b><br>${escapeHTML((sp.content || '').slice(0, 80))}</div>
-    </div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
+    </div><div class="bubble-meta" style="justify-content:${mine ? 'flex-end' : 'flex-start'};"><span class="bubble-time">${timeShort(m.created_at)}</span>${tickHTML(m)}</div></div></div>`;
   }
   if (m.media_type === 'image' && m.media) {
-    return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble media-bubble"><img src="${m.media}" loading="lazy" data-open-zoom>${m.text ? `<div style="padding:6px 4px 0;font-size:13.5px;">${escapeHTML(m.text)}</div>` : ''}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
+    return `<div class="bubble-row ${mine ? 'me' : 'them'}" data-msg-id="${m.id}"><div><div class="bubble media-bubble"><img src="${m.media}" loading="lazy" data-open-zoom>${m.text ? `<div style="padding:6px 4px 0;font-size:13.5px;">${escapeHTML(m.text)}</div>` : ''}</div><div class="bubble-meta" style="justify-content:${mine ? 'flex-end' : 'flex-start'};"><span class="bubble-time">${timeShort(m.created_at)}</span>${tickHTML(m)}</div></div></div>`;
   }
-  return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble">${escapeHTML(m.text)}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
+  return `<div class="bubble-row ${mine ? 'me' : 'them'}" data-msg-id="${m.id}"><div><div class="bubble">${escapeHTML(m.text)}</div><div class="bubble-meta" style="justify-content:${mine ? 'flex-end' : 'flex-start'};"><span class="bubble-time">${timeShort(m.created_at)}</span>${tickHTML(m)}</div></div></div>`;
 }
 
 document.getElementById('chatPane').addEventListener('click', (e) => {
@@ -1753,7 +1857,7 @@ async function openNewGroupModal() {
     try {
       await api('/groups', { method: 'POST', body: { name, memberIds: [...picked.keys()] } });
       overlay.remove();
-      loadGroups();
+      showView('chat'); switchChatTab('groups');
       toast('Group created.');
     } catch (err) { toast(err.message); }
   });
@@ -1892,14 +1996,36 @@ async function loadSettings() {
   });
   updatePremiumUI();
   applyAccentColor(me.settings.accentColor);
+  applyTheme(me.settings.darkMode);
 }
 function updatePremiumUI() {
   const isPremium = state.me.settings.accountType === 'premium';
+  const followers = state.me.followers || 0;
+  const minFollowers = state.me.premiumMinFollowers || 20;
   document.getElementById('accountTypeDesc').textContent = isPremium ? 'Premium account ★' : 'Free account';
   const btn = document.getElementById('togglePremiumBtn');
-  btn.textContent = isPremium ? 'Manage / Downgrade' : 'Go Premium';
-  btn.classList.toggle('btn-gold', !isPremium);
-  btn.classList.toggle('btn-danger', isPremium);
+  const gateNote = document.getElementById('premiumGateNote');
+  const gateText = document.getElementById('premiumGateText');
+  const fill = document.getElementById('premiumProgressFill');
+  if (isPremium) {
+    btn.textContent = 'Manage / Downgrade';
+    btn.disabled = false;
+    btn.classList.remove('btn-gold'); btn.classList.add('btn-danger');
+    gateNote.classList.add('hidden');
+  } else {
+    btn.classList.remove('btn-danger'); btn.classList.add('btn-gold');
+    if (followers < minFollowers) {
+      btn.textContent = 'Go Premium';
+      btn.disabled = true;
+      gateNote.classList.remove('hidden');
+      gateText.textContent = `Need ${minFollowers - followers} more follower${minFollowers - followers === 1 ? '' : 's'} to unlock Premium (${followers}/${minFollowers})`;
+      fill.style.width = Math.min(100, (followers / minFollowers) * 100) + '%';
+    } else {
+      btn.textContent = 'Go Premium';
+      btn.disabled = false;
+      gateNote.classList.add('hidden');
+    }
+  }
 }
 document.getElementById('togglePremiumBtn').addEventListener('click', async () => {
   const isPremium = state.me.settings.accountType === 'premium';
@@ -1913,16 +2039,29 @@ document.getElementById('togglePremiumBtn').addEventListener('click', async () =
   } catch (err) { toast(err.message); }
 });
 document.querySelectorAll('[data-setting]').forEach(el => {
-  el.addEventListener('change', async () => {
+  const saveHandler = async () => {
     const key = el.dataset.setting;
     const value = el.type === 'checkbox' ? el.checked : el.value;
+    const previous = state.me.settings[key];
     try {
       const settings = await api('/settings', { method: 'PUT', body: { [key]: value } });
       state.me = { ...state.me, settings };
       if (key === 'accentColor') applyAccentColor(value);
+      if (key === 'darkMode') applyTheme(value);
       toast('Setting saved.');
-    } catch (err) { toast(err.message); }
-  });
+    } catch (err) {
+      toast(err.message);
+      // revert the control if the save failed (e.g. premium gate)
+      if (el.type === 'checkbox') el.checked = !!previous; else el.value = previous;
+    }
+  };
+  el.addEventListener('change', saveHandler);
+  // color pickers on mobile/web sometimes only fire 'change' once the
+  // picker closes — 'input' makes it feel live while dragging too.
+  if (el.type === 'color') {
+    let colorDeb;
+    el.addEventListener('input', () => { clearTimeout(colorDeb); applyAccentColor(el.value); colorDeb = setTimeout(saveHandler, 350); });
+  }
 });
 
 document.getElementById('notifPermRow').addEventListener('click', requestNotifPermission);
@@ -1955,7 +2094,12 @@ async function openBlockedAccounts() {
    SOCKET.IO — presence, DMs, groups, notifications, calls
    ================================================================== */
 function connectSocket() {
-  state.socket = io({ auth: { token: state.token } });
+  state.socket = io({ auth: { token: state.token }, reconnection: true, reconnectionAttempts: Infinity });
+
+  state.socket.on('connect_error', (err) => {
+    toast('Connection issue — retrying…');
+    console.warn('socket connect_error:', err.message);
+  });
 
   state.socket.on('presence', ({ userId, isOnline }) => {
     if (isOnline) state.onlineUserIds.add(userId); else state.onlineUserIds.delete(userId);
@@ -1966,7 +2110,7 @@ function connectSocket() {
   });
 
   state.socket.on('dm:receive', (msg) => {
-    if (state.activeConvUserId === msg.sender_id && state.view === 'chat') {
+    if (state.activeConvUserId === msg.sender_id && state.view === 'chat' && state.chatTab === 'dm') {
       const body = document.getElementById('chatBody');
       if (body) { body.insertAdjacentHTML('beforeend', bubbleHTML(msg)); body.scrollTop = body.scrollHeight; }
     }
@@ -1979,6 +2123,17 @@ function connectSocket() {
       if (body) { body.insertAdjacentHTML('beforeend', bubbleHTML(msg)); body.scrollTop = body.scrollHeight; }
     }
   });
+  // WhatsApp-style: recipient opened the thread → flip our sent
+  // bubbles to blue double ticks.
+  state.socket.on('dm:seen', ({ by, messageIds }) => {
+    (messageIds || []).forEach(id => {
+      const row = document.querySelector(`[data-msg-id="${id}"]`);
+      if (!row) return;
+      const tickEl = row.querySelector('.tick');
+      if (tickEl) tickEl.outerHTML = TICK_DOUBLE_READ;
+    });
+    if (state.view === 'chat') loadConversations();
+  });
   state.socket.on('dm:typing', ({ from }) => {
     if (state.activeConvUserId !== from) return;
     const el = document.getElementById('typingIndicator');
@@ -1989,19 +2144,19 @@ function connectSocket() {
   });
 
   state.socket.on('group:receive', (msg) => {
-    if (state.activeGroupId === msg.group_id && state.view === 'groups') {
+    if (state.activeGroupId === msg.group_id && state.view === 'chat' && state.chatTab === 'groups') {
       const body = document.getElementById('groupBody');
       if (body) { body.insertAdjacentHTML('beforeend', bubbleHTML(msg)); body.scrollTop = body.scrollHeight; }
     }
     if (msg.sender_id !== state.me.id && !isMuted('group', msg.group_id)) pushNotify('New group message', msg.text || '📷 Photo', { tag: 'group-' + msg.group_id });
   });
   state.socket.on('group:updated', (g) => {
-    if (state.view === 'groups') loadGroups();
+    if (state.view === 'chat' && state.chatTab === 'groups') loadGroups();
   });
   state.socket.on('group:removed', ({ groupId }) => {
     toast('You were removed from a group.');
     if (state.activeGroupId === groupId) { state.activeGroupId = null; }
-    if (state.view === 'groups') loadGroups();
+    if (state.view === 'chat' && state.chatTab === 'groups') loadGroups();
   });
 
   state.socket.on('notification', (n) => {
@@ -2015,28 +2170,49 @@ function connectSocket() {
   // -------- WebRTC calling --------
   state.socket.on('call:incoming', ({ from, fromUser, kind, offer }) => showIncomingCall(from, fromUser, kind, offer));
   state.socket.on('call:answered', async ({ answer }) => {
+    if (!state.peerConnection) return;
+    clearTimeout(state.callRingTimeout);
     await state.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+    flushPendingCandidates();
     setCallStatus('Connected');
     stopRingtone();
     startCallTimer();
   });
+  // THE FIX: candidates that arrive before we have a peer connection
+  // with a remote description are queued instead of silently dropped
+  // — this was the main reason calls failed to connect.
   state.socket.on('call:ice', ({ candidate }) => {
-    if (state.peerConnection && candidate) state.peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
+    if (!candidate) return;
+    if (state.peerConnection && state.peerConnection.remoteDescription && state.peerConnection.remoteDescription.type) {
+      state.peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch((err) => console.warn('addIceCandidate failed:', err.message));
+    } else {
+      state.pendingCandidates.push(candidate);
+    }
   });
   state.socket.on('call:declined', () => { toast('Call declined.'); stopRingtone(); endCall(false); });
   state.socket.on('call:ended', () => { toast('Call ended.'); stopRingtone(); endCall(false); });
+  state.socket.on('call:unreachable', () => { toast('They appear to be offline.'); stopRingtone(); endCall(false); });
   state.socket.on('call:peer_mute', ({ muted }) => setCallStatus(muted ? 'They muted their mic' : 'Connected'));
   state.socket.on('call:peer_video_toggle', ({ videoOn }) => setCallStatus(videoOn ? 'Connected' : 'Their video is off'));
 }
+function flushPendingCandidates() {
+  if (!state.peerConnection) return;
+  state.pendingCandidates.forEach(c => state.peerConnection.addIceCandidate(new RTCIceCandidate(c)).catch((err) => console.warn('addIceCandidate failed:', err.message)));
+  state.pendingCandidates = [];
+}
 
 /* -------- calling UI + WebRTC -------- */
-const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' }
+];
 
 async function startCall(user, kind) {
   state.callPeerId = user.id;
   state.callKind = kind;
   state.callMuted = false;
   state.callVideoOn = kind === 'video';
+  state.pendingCandidates = [];
   buildCallOverlay(user, kind, 'Calling…');
   try {
     state.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: kind === 'video' });
@@ -2048,10 +2224,21 @@ async function startCall(user, kind) {
   state.localStream.getTracks().forEach(t => state.peerConnection.addTrack(t, state.localStream));
   state.peerConnection.ontrack = (e) => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
   state.peerConnection.onicecandidate = (e) => { if (e.candidate) state.socket.emit('call:ice', { to: user.id, candidate: e.candidate }); };
+  state.peerConnection.oniceconnectionstatechange = () => {
+    const st = state.peerConnection?.iceConnectionState;
+    if (st === 'failed') { toast('Call connection failed — check your network.'); endCall(false); }
+  };
 
   const offer = await state.peerConnection.createOffer();
   await state.peerConnection.setLocalDescription(offer);
   state.socket.emit('call:invite', { to: user.id, kind, offer });
+
+  // If nobody answers within 35s, stop ringing instead of hanging forever.
+  state.callRingTimeout = setTimeout(() => {
+    toast('No answer.');
+    state.socket.emit('call:end', { to: user.id });
+    endCall(false);
+  }, 35000);
 }
 
 function showIncomingCall(fromId, fromUser, kind, offer) {
@@ -2087,6 +2274,7 @@ async function acceptCall(fromId, fromUser, kind, offer) {
   state.callKind = kind;
   state.callMuted = false;
   state.callVideoOn = kind === 'video';
+  state.pendingCandidates = [];
   buildCallOverlay(fromUser, kind, 'Connecting…');
   try {
     state.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: kind === 'video' });
@@ -2098,8 +2286,13 @@ async function acceptCall(fromId, fromUser, kind, offer) {
   state.localStream.getTracks().forEach(t => state.peerConnection.addTrack(t, state.localStream));
   state.peerConnection.ontrack = (e) => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
   state.peerConnection.onicecandidate = (e) => { if (e.candidate) state.socket.emit('call:ice', { to: fromId, candidate: e.candidate }); };
+  state.peerConnection.oniceconnectionstatechange = () => {
+    const st = state.peerConnection?.iceConnectionState;
+    if (st === 'failed') { toast('Call connection failed — check your network.'); endCall(false); }
+  };
 
   await state.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+  flushPendingCandidates();
   const answer = await state.peerConnection.createAnswer();
   await state.peerConnection.setLocalDescription(answer);
   state.socket.emit('call:answer', { to: fromId, answer });
@@ -2164,10 +2357,12 @@ function startCallTimer() {
 }
 function endCall() {
   stopRingtone();
+  clearTimeout(state.callRingTimeout);
   if (state.peerConnection) { state.peerConnection.close(); state.peerConnection = null; }
   if (state.localStream) { state.localStream.getTracks().forEach(t => t.stop()); state.localStream = null; }
   clearInterval(state.callTimerInterval);
   state.callTimerInterval = null; state.callStartedAt = null;
+  state.pendingCandidates = [];
   const overlay = document.getElementById('callOverlay');
   if (overlay) overlay.remove();
   state.callPeerId = null;
@@ -2199,13 +2394,13 @@ async function boot() {
   document.getElementById('appView').classList.add('active');
   renderRailAvatar();
   applyAccentColor(state.me.settings.accentColor);
+  applyTheme(state.me.settings.darkMode);
   connectSocket();
   setupFeedObserver();
   showView('feed', { skipReload: true });
   loadFeed(true);
   loadConversations();
   if (state.me.settings.pushNotifications && 'Notification' in window && Notification.permission === 'default') {
-    // Ask once, quietly, after the app is actually usable.
     setTimeout(() => Notification.requestPermission().then(refreshNotifPermRow), 1200);
   }
 }
