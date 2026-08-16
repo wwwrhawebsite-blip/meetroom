@@ -1,6 +1,6 @@
 /* ============================================================
    YOUR DAY DIARY — Social Media App Backend (single file)
-   Stack: Express + Socket.IO + MySQL (mysql2) + JWT auth
+   Stack: Express + Socket.IO + MySQL (mysql2) + JWT auth + Multer
    Run:   npm install
           node server.js
    Then open http://localhost:3000
@@ -12,6 +12,21 @@
      DB_USER (default: root)
      DB_PASSWORD (default: '')
      DB_NAME (default: day_diary)
+
+   ---- PERFORMANCE NOTES (why this version is fast) ----
+   1. Photos are uploaded as files (multer) and stored on disk
+      under /public/uploads, referenced by a short URL. The old
+      version stored full base64 images/videos as LONGTEXT inside
+      every API response — that's what made the feed, chat, and
+      profile pages slow to load, especially on phones.
+   2. Video support has been removed entirely (per request). Video
+      was the single biggest source of huge payloads.
+   3. Feed/profile post queries were rewritten from N+1 per-post
+      lookups into single JOIN + subquery-count queries.
+   4. Feed is paginated (cursor-based, 20 posts per page) with
+      infinite scroll instead of loading up to 100 posts at once.
+   5. Indexes were added for every hot lookup path (posts by user,
+      likes/comments/shares by post, messages by conversation).
    ============================================================ */
 
 require('dotenv').config();
@@ -20,9 +35,11 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql2/promise');
+const multer = require('multer');
 const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
@@ -49,12 +66,36 @@ if (!process.env.JWT_SECRET) {
 let pool;
 
 // ---------------------------------------------------------------
+// UPLOADS — photos are saved to disk instead of shipped as base64
+// inside JSON. Only image mimetypes are accepted (video removed).
+// ---------------------------------------------------------------
+const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    filename: (req, file, cb) => {
+      const ext = (path.extname(file.originalname) || '.jpg').toLowerCase();
+      const safeExt = /^\.(jpe?g|png|webp|gif)$/.test(ext) ? ext : '.jpg';
+      cb(null, `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${safeExt}`);
+    }
+  }),
+  limits: { fileSize: 12 * 1024 * 1024 }, // 12MB per photo
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_IMAGE_TYPES.has(file.mimetype)) return cb(new Error('Only photo uploads (jpeg/png/webp/gif) are allowed.'));
+    cb(null, true);
+  }
+});
+
+// ---------------------------------------------------------------
 // DB SETUP — connects, creates the database if missing, then
 // runs schema.sql (safe to run every time; skips existing tables
 // and ignores "index already exists" on repeat runs).
 // ---------------------------------------------------------------
 async function setupDatabase() {
-  // First connect without selecting a database, so we can create it.
   const rootConn = await mysql.createConnection({
     host: DB_CONFIG.host, port: DB_CONFIG.port, user: DB_CONFIG.user, password: DB_CONFIG.password,
     multipleStatements: true,
@@ -65,9 +106,6 @@ async function setupDatabase() {
 
   pool = mysql.createPool(DB_CONFIG);
 
-  // Run schema.sql. CREATE TABLE IF NOT EXISTS is safe to repeat.
-  // CREATE INDEX has no IF NOT EXISTS in MySQL, so we only add
-  // indexes the first time (checked via information_schema).
   const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   const statements = schemaSql
     .split(';')
@@ -90,10 +128,12 @@ async function setupDatabase() {
   }
 
   // ---- lightweight migrations for installs created before this update ----
+  // media_type is retained but only ever 'image' or 'none' now (video removed).
   await migrateColumn('posts', 'media_type', "VARCHAR(10) NOT NULL DEFAULT 'none'");
   await migrateColumn('messages', 'media', 'LONGTEXT NULL');
   await migrateColumn('messages', 'media_type', "VARCHAR(10) NOT NULL DEFAULT 'none'");
   await migrateColumn('messages', 'shared_post_id', 'INT NULL');
+  await migrateColumn('messages', 'deleted_for', 'VARCHAR(50) NULL'); // csv of user ids who cleared this thread
   await migrateColumn('group_members', 'is_admin', 'TINYINT(1) NOT NULL DEFAULT 0');
   await migrateColumn('groups', 'photo', 'LONGTEXT NULL');
   await migrateColumn('groups', 'description', 'VARCHAR(500) NULL');
@@ -126,26 +166,36 @@ async function all(sql, params = []) {
 }
 
 const DEFAULT_SETTINGS = {
-  privateAccount: false,        // who can see your posts
-  showOnlineStatus: true,       // show green dot to others
-  readReceipts: true,           // seen ticks in chat
-  allowMessagesFrom: 'everyone',// everyone | followers | nobody
-  darkMode: true,               // theme
+  privateAccount: false,
+  showOnlineStatus: true,
+  readReceipts: true,
+  allowMessagesFrom: 'everyone',
+  darkMode: true,
   emailNotifications: true,
   pushNotifications: true,
+  notificationSound: true,          // ringtone/beep on new message, call, notification
   twoFactorAuth: false,
   language: 'en',
-  autoplayVideos: true,
-  showActivityStatus: true,     // last-seen timestamp visibility
-  hideLikeCounts: false,        // hide like counts from others
+  autoplayVideos: true,             // kept for backward compatibility, unused (video removed)
+  showActivityStatus: true,
+  hideLikeCounts: false,
   allowTagging: true,
   allowSharingOfMyPosts: true,
-  dataSaver: false
+  dataSaver: false,
+  // ---- Premium / professional settings ----
+  accountType: 'free',              // 'free' | 'premium'
+  accentColor: '#0095f6',
+  proBadge: true,                   // show a badge on premium profiles
+  priorityInbox: false,             // premium: sort DMs from followers first
+  customStatus: '',                 // premium: short status line on profile
+  // ---- per-user mute lists (client enforces silence for these) ----
+  mutedConversations: [],
+  mutedGroups: []
 };
 
 function parseSettings(row) {
-  if (!row) return DEFAULT_SETTINGS;
-  if (row.settings == null) return DEFAULT_SETTINGS;
+  if (!row) return { ...DEFAULT_SETTINGS };
+  if (row.settings == null) return { ...DEFAULT_SETTINGS };
   const raw = typeof row.settings === 'string' ? JSON.parse(row.settings) : row.settings;
   return { ...DEFAULT_SETTINGS, ...raw };
 }
@@ -154,12 +204,15 @@ function parseSettings(row) {
 // APP + SOCKET SETUP
 // ---------------------------------------------------------------
 const app = express();
-app.use(express.json({ limit: '100mb' })); // base64 images/videos
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({ limit: '2mb' })); // no more base64 media in JSON bodies
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '30d',       // aggressively cache uploaded photos + static assets
+  etag: true
+}));
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  maxHttpBufferSize: 100 * 1024 * 1024
+  maxHttpBufferSize: 2 * 1024 * 1024
 });
 
 // userId -> Set of socket ids (multiple tabs/devices)
@@ -183,9 +236,23 @@ function publicUser(row) {
   return {
     id: row.id, username: row.username, name: row.name, bio: row.bio,
     avatar: row.avatar, isOnline: !!onlineUsers.get(row.id)?.size && settings.showOnlineStatus,
-    lastSeen: settings.showActivityStatus ? row.last_seen : null, createdAt: row.created_at
+    lastSeen: settings.showActivityStatus ? row.last_seen : null, createdAt: row.created_at,
+    accountType: settings.accountType, proBadge: settings.accountType === 'premium' && settings.proBadge,
+    accentColor: settings.accentColor, customStatus: settings.accountType === 'premium' ? settings.customStatus : ''
   };
 }
+
+// ---------------------------------------------------------------
+// UPLOAD ROUTE — photos only. Returns a short URL to store on a
+// post/message/profile instead of embedding base64 everywhere.
+// ---------------------------------------------------------------
+app.post('/api/upload', authMiddleware, (req, res) => {
+  upload.single('photo')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Upload failed.' });
+    if (!req.file) return res.status(400).json({ error: 'No photo received.' });
+    res.json({ url: `/uploads/${req.file.filename}` });
+  });
+});
 
 // ---------------------------------------------------------------
 // AUTH ROUTES
@@ -278,8 +345,6 @@ app.get('/api/blocked', authMiddleware, async (req, res) => {
   res.json(rows.map(publicUser));
 });
 
-// ID search — like Instagram's search-by-username. Returns quick
-// suggestions (username/name matches) for live-typing search boxes.
 app.get('/api/search', authMiddleware, async (req, res) => {
   const term = (req.query.q || '').trim();
   if (!term) return res.json([]);
@@ -325,71 +390,93 @@ app.post('/api/unblock/:userId', authMiddleware, async (req, res) => {
 
 // ---------------------------------------------------------------
 // POSTS / FEED / LIKES / COMMENTS / SHARES
+// (images only — video support removed for speed)
 // ---------------------------------------------------------------
-function detectMediaType(explicit, dataUrl) {
-  if (explicit === 'image' || explicit === 'video') return explicit;
-  if (typeof dataUrl === 'string') {
-    if (dataUrl.startsWith('data:video')) return 'video';
-    if (dataUrl.startsWith('data:image')) return 'image';
-  }
-  return 'none';
+function detectMediaType(dataUrlOrPath) {
+  return dataUrlOrPath ? 'image' : 'none';
 }
 
-async function hydratePosts(rows, viewerId) {
-  const out = [];
-  for (const p of rows) {
-    const author = await get('SELECT * FROM users WHERE id = ?', [p.user_id]);
-    const authorSettings = parseSettings(author);
-    const likeCount = await get('SELECT COUNT(*) c FROM likes WHERE post_id = ?', [p.id]);
-    const commentCount = await get('SELECT COUNT(*) c FROM comments WHERE post_id = ?', [p.id]);
-    const shareCount = await get('SELECT COUNT(*) c FROM shares WHERE post_id = ?', [p.id]);
-    const likedByMe = await get('SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?', [p.id, viewerId]);
-    out.push({
-      id: p.id, content: p.content, image: p.image,
-      mediaType: p.media_type || detectMediaType(null, p.image),
-      createdAt: p.created_at,
-      author: publicUser(author),
-      likeCount: authorSettings.hideLikeCounts && p.user_id !== viewerId ? null : likeCount.c,
-      commentCount: commentCount.c, shareCount: shareCount.c,
-      likedByMe: !!likedByMe,
-      allowSharing: authorSettings.allowSharingOfMyPosts !== false || p.user_id === viewerId
-    });
+// Single JOIN + correlated-subquery query instead of N+1 per-post
+// round trips. This is the main fix for the slow-loading feed.
+async function fetchPostsFast({ where, params, viewerId, limit, before }) {
+  const clauses = [where];
+  const values = [...params];
+  if (before) {
+    clauses.push('posts.id < ?');
+    values.push(before);
   }
-  return out;
+  const sql = `
+    SELECT posts.id, posts.content, posts.image, posts.media_type, posts.created_at, posts.user_id,
+           users.username, users.name, users.bio, users.avatar, users.settings AS author_settings,
+           users.last_seen, users.created_at AS author_created_at,
+           (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likeCount,
+           (SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) AS commentCount,
+           (SELECT COUNT(*) FROM shares WHERE shares.post_id = posts.id) AS shareCount,
+           EXISTS(SELECT 1 FROM likes WHERE likes.post_id = posts.id AND likes.user_id = ?) AS likedByMe
+    FROM posts
+    JOIN users ON users.id = posts.user_id
+    WHERE ${clauses.join(' AND ')}
+    ORDER BY posts.id DESC
+    LIMIT ?`;
+  const rows = await all(sql, [viewerId, ...values, limit]);
+  return rows.map(p => {
+    const authorSettings = parseSettings({ settings: p.author_settings });
+    const author = publicUser({
+      id: p.user_id, username: p.username, name: p.name, bio: p.bio, avatar: p.avatar,
+      settings: p.author_settings, last_seen: p.last_seen, created_at: p.author_created_at
+    });
+    return {
+      id: p.id, content: p.content, image: p.image,
+      mediaType: p.media_type || detectMediaType(p.image),
+      createdAt: p.created_at,
+      author,
+      likeCount: authorSettings.hideLikeCounts && p.user_id !== viewerId ? null : p.likeCount,
+      commentCount: p.commentCount, shareCount: p.shareCount,
+      likedByMe: !!p.likedByMe,
+      allowSharing: authorSettings.allowSharingOfMyPosts !== false || p.user_id === viewerId
+    };
+  });
 }
 
 app.get('/api/feed', authMiddleware, async (req, res) => {
-  const rows = await all(
-    `SELECT posts.* FROM posts
-     WHERE user_id = ?
-        OR user_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
-     ORDER BY created_at DESC LIMIT 100`,
-    [req.user.id, req.user.id]
-  );
-  res.json(await hydratePosts(rows, req.user.id));
+  const limit = Math.min(Number(req.query.limit) || 20, 50);
+  const before = req.query.before ? Number(req.query.before) : null;
+  const posts = await fetchPostsFast({
+    where: `(user_id = ? OR user_id IN (SELECT following_id FROM follows WHERE follower_id = ?))`,
+    params: [req.user.id, req.user.id],
+    viewerId: req.user.id, limit, before
+  });
+  res.json({ posts, hasMore: posts.length === limit });
 });
 
 app.get('/api/users/:username/posts', authMiddleware, async (req, res) => {
   const user = await get('SELECT id FROM users WHERE username = ?', [req.params.username]);
   if (!user) return res.status(404).json({ error: 'User not found.' });
-  const rows = await all('SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC', [user.id]);
-  res.json(await hydratePosts(rows, req.user.id));
+  const limit = Math.min(Number(req.query.limit) || 30, 60);
+  const before = req.query.before ? Number(req.query.before) : null;
+  const posts = await fetchPostsFast({
+    where: `user_id = ?`, params: [user.id], viewerId: req.user.id, limit, before
+  });
+  res.json({ posts, hasMore: posts.length === limit });
 });
 
 app.post('/api/posts', authMiddleware, async (req, res) => {
-  const { content, image, mediaType } = req.body;
-  if (!content && !image) return res.status(400).json({ error: 'Post needs text or media.' });
-  const type = detectMediaType(mediaType, image);
+  const { content, image } = req.body;
+  if (!content && !image) return res.status(400).json({ error: 'Post needs text or a photo.' });
+  const type = detectMediaType(image);
   const result = await run('INSERT INTO posts (user_id, content, image, media_type) VALUES (?, ?, ?, ?)',
     [req.user.id, content || '', image || '', type]);
-  const rows = await all('SELECT * FROM posts WHERE id = ?', [result.lastID]);
-  res.json((await hydratePosts(rows, req.user.id))[0]);
+  const posts = await fetchPostsFast({ where: 'posts.id = ?', params: [result.lastID], viewerId: req.user.id, limit: 1 });
+  res.json(posts[0]);
 });
 
 app.delete('/api/posts/:id', authMiddleware, async (req, res) => {
   const post = await get('SELECT * FROM posts WHERE id = ?', [req.params.id]);
   if (!post || post.user_id !== req.user.id) return res.status(403).json({ error: 'Not allowed.' });
   await run('DELETE FROM posts WHERE id = ?', [req.params.id]);
+  if (post.image && post.image.startsWith('/uploads/')) {
+    fs.unlink(path.join(__dirname, 'public', post.image), () => {});
+  }
   res.json({ ok: true });
 });
 
@@ -408,13 +495,16 @@ app.post('/api/posts/:id/like', authMiddleware, async (req, res) => {
 });
 
 app.get('/api/posts/:id/comments', authMiddleware, async (req, res) => {
-  const rows = await all('SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC', [req.params.id]);
-  const out = [];
-  for (const c of rows) {
-    const author = await get('SELECT * FROM users WHERE id = ?', [c.user_id]);
-    out.push({ id: c.id, text: c.text, createdAt: c.created_at, author: publicUser(author) });
-  }
-  res.json(out);
+  const rows = await all(
+    `SELECT comments.*, users.username, users.name, users.avatar, users.settings AS author_settings
+     FROM comments JOIN users ON users.id = comments.user_id
+     WHERE post_id = ? ORDER BY comments.created_at ASC`,
+    [req.params.id]
+  );
+  res.json(rows.map(c => ({
+    id: c.id, text: c.text, createdAt: c.created_at,
+    author: publicUser({ id: c.user_id, username: c.username, name: c.name, avatar: c.avatar, settings: c.author_settings })
+  })));
 });
 
 app.post('/api/posts/:id/comments', authMiddleware, async (req, res) => {
@@ -433,7 +523,6 @@ app.post('/api/posts/:id/share', authMiddleware, async (req, res) => {
   res.json({ shareCount: shareCount.c });
 });
 
-// Share a post directly into a DM thread with another user.
 app.post('/api/posts/:id/share-to/:userId', authMiddleware, async (req, res) => {
   const post = await get('SELECT * FROM posts WHERE id = ?', [req.params.id]);
   if (!post) return res.status(404).json({ error: 'Post not found.' });
@@ -482,11 +571,30 @@ app.get('/api/messages/:userId', authMiddleware, async (req, res) => {
     `SELECT * FROM messages
      WHERE group_id IS NULL AND
        ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+       AND NOT FIND_IN_SET(?, COALESCE(deleted_for, ''))
      ORDER BY created_at ASC LIMIT 200`,
-    [req.user.id, otherId, otherId, req.user.id]
+    [req.user.id, otherId, otherId, req.user.id, req.user.id]
   );
   await run(`UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?`, [otherId, req.user.id]);
   res.json(await attachSharedPost(rows));
+});
+
+// Clear a 1:1 conversation for the requesting user only (soft-delete
+// via a comma-separated "deleted_for" list so the other side keeps
+// their copy — used by the new "Clear chat" chat-settings option).
+app.delete('/api/messages/:userId', authMiddleware, async (req, res) => {
+  const otherId = Number(req.params.userId);
+  const rows = await all(
+    `SELECT id, deleted_for FROM messages WHERE group_id IS NULL AND
+     ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))`,
+    [req.user.id, otherId, otherId, req.user.id]
+  );
+  for (const m of rows) {
+    const set = new Set((m.deleted_for || '').split(',').filter(Boolean));
+    set.add(String(req.user.id));
+    await run('UPDATE messages SET deleted_for = ? WHERE id = ?', [[...set].join(','), m.id]);
+  }
+  res.json({ ok: true });
 });
 
 app.get('/api/conversations', authMiddleware, async (req, res) => {
@@ -500,11 +608,12 @@ app.get('/api/conversations', authMiddleware, async (req, res) => {
     if (!r.other_id) continue;
     const other = await get('SELECT * FROM users WHERE id = ?', [r.other_id]);
     const last = await get(
-      `SELECT * FROM messages WHERE group_id IS NULL AND
+      `SELECT * FROM messages WHERE group_id IS NULL AND NOT FIND_IN_SET(?, COALESCE(deleted_for, '')) AND
        ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
        ORDER BY created_at DESC LIMIT 1`,
-      [req.user.id, r.other_id, r.other_id, req.user.id]
+      [req.user.id, req.user.id, r.other_id, r.other_id, req.user.id]
     );
+    if (!last) continue; // conversation was fully cleared by this user
     const unread = await get(
       `SELECT COUNT(*) c FROM messages WHERE sender_id = ? AND receiver_id = ? AND is_read = 0`,
       [r.other_id, req.user.id]
@@ -658,18 +767,18 @@ io.on('connection', async (socket) => {
   const groups = await all('SELECT group_id FROM group_members WHERE user_id = ?', [userId]);
   groups.forEach((g) => socket.join(`group:${g.group_id}`));
 
-  socket.on('dm:send', async ({ to, text, media, mediaType }) => {
+  socket.on('dm:send', async ({ to, text, media }) => {
     const hasMedia = !!media;
     if ((!text || !text.trim()) && !hasMedia) return;
     const blocked = await get('SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?', [to, userId]);
     if (blocked) return socket.emit('error_msg', { error: 'You cannot message this user.' });
     const result = await run(
       'INSERT INTO messages (sender_id, receiver_id, text, media, media_type) VALUES (?, ?, ?, ?, ?)',
-      [userId, to, (text || '').trim(), media || null, hasMedia ? (mediaType || 'image') : 'none']
+      [userId, to, (text || '').trim(), media || null, hasMedia ? 'image' : 'none']
     );
     const msg = {
       id: result.lastID, sender_id: userId, receiver_id: to, text: (text || '').trim(),
-      media: media || null, media_type: hasMedia ? (mediaType || 'image') : 'none',
+      media: media || null, media_type: hasMedia ? 'image' : 'none',
       created_at: new Date().toISOString(), is_read: 0
     };
     io.to(`user:${to}`).emit('dm:receive', msg);
@@ -678,24 +787,25 @@ io.on('connection', async (socket) => {
 
   socket.on('dm:typing', ({ to }) => io.to(`user:${to}`).emit('dm:typing', { from: userId }));
 
-  socket.on('group:send', async ({ groupId, text, media, mediaType }) => {
+  socket.on('group:send', async ({ groupId, text, media }) => {
     const hasMedia = !!media;
     if ((!text || !text.trim()) && !hasMedia) return;
     const member = await get('SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?', [groupId, userId]);
     if (!member) return;
     const result = await run(
       'INSERT INTO messages (sender_id, group_id, text, media, media_type) VALUES (?, ?, ?, ?, ?)',
-      [userId, groupId, (text || '').trim(), media || null, hasMedia ? (mediaType || 'image') : 'none']
+      [userId, groupId, (text || '').trim(), media || null, hasMedia ? 'image' : 'none']
     );
     const msg = {
       id: result.lastID, sender_id: userId, group_id: groupId, text: (text || '').trim(),
-      media: media || null, media_type: hasMedia ? (mediaType || 'image') : 'none',
+      media: media || null, media_type: hasMedia ? 'image' : 'none',
       created_at: new Date().toISOString()
     };
     io.to(`group:${groupId}`).emit('group:receive', msg);
   });
 
-  // -------- WebRTC call signaling (1:1 voice/video) --------
+  // -------- WebRTC call signaling (1:1 voice/video calling — this is
+  // live calling, not stored "video" content, so it was kept) --------
   socket.on('call:invite', ({ to, kind, offer }) => {
     io.to(`user:${to}`).emit('call:incoming', { from: userId, fromUser: socket.user, kind, offer });
   });
