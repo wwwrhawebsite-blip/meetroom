@@ -1588,13 +1588,9 @@ function markConversationSeen(peerId) {
 
 function tickHTML(m, mine) {
   if (!mine) return '';
-  // status precedence: seen (blue double) > delivered (grey double) > sent (grey single)
-  const status = m.status || (m.seen_at || m.seen ? 'seen' : (m.delivered_at || m.delivered ? 'delivered' : 'sent'));
-  if (status === 'seen') {
+  const seen = m.status === 'seen' || !!m.is_read;
+  if (seen) {
     return `<svg class="tick tick-seen" viewBox="0 0 20 12" width="16" height="10"><path d="M0.5 6.5L4 10L9 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 6.5L10 10L16 2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
-  }
-  if (status === 'delivered') {
-    return `<svg class="tick" viewBox="0 0 20 12" width="16" height="10"><path d="M0.5 6.5L4 10L9 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 6.5L10 10L16 2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
   }
   return `<svg class="tick" viewBox="0 0 20 12" width="16" height="10"><path d="M2 6.5L6.5 10.5L18 1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
 }
@@ -1987,6 +1983,7 @@ document.querySelectorAll('[data-setting]').forEach(el => {
       const settings = await api('/settings', { method: 'PUT', body: { [key]: value } });
       state.me = { ...state.me, settings };
       toast('Setting saved.');
+      if (key === 'pushNotifications' && value) maybeSubscribeToPush();
     } catch (err) {
       // Roll back the optimistic UI change if the save failed.
       if (key === 'darkMode') applyDarkMode(!value);
@@ -2027,6 +2024,53 @@ async function openBlockedAccounts() {
       toast('Unblocked.');
     });
   } catch (err) { overlay.querySelector('#blockedList').innerHTML = `<div class="empty">${escapeHTML(err.message)}</div>`; }
+}
+
+/* ==================================================================
+   REAL MOBILE PUSH — Service Worker registration + Push API
+   subscription. This is what makes notifications arrive even when
+   the app/tab is closed (foreground-only `new Notification()` calls
+   above still run for the "app is open" case).
+   ================================================================== */
+let swRegistration = null;
+
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    swRegistration = await navigator.serviceWorker.register('/sw.js');
+    return swRegistration;
+  } catch (e) {
+    console.warn('Service worker registration failed:', e);
+    return null;
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function maybeSubscribeToPush() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!('PushManager' in window)) return; // e.g. iOS Safari outside an installed PWA
+  if (!swRegistration) swRegistration = await registerServiceWorker();
+  if (!swRegistration) return;
+  try {
+    const { key } = await api('/push/vapid-public-key');
+    if (!key) return; // server has no VAPID keys configured — push disabled
+    let sub = await swRegistration.pushManager.getSubscription();
+    if (!sub) {
+      sub = await swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key)
+      });
+    }
+    await api('/push/subscribe', { method: 'POST', body: sub.toJSON() });
+  } catch (e) {
+    console.warn('Push subscription failed:', e);
+  }
 }
 
 /* ==================================================================
@@ -2286,14 +2330,24 @@ async function boot() {
   renderRailAvatar();
   applyAccentColor(state.me.settings.accentColor);
   applyDarkMode(state.me.settings.darkMode);
+  registerServiceWorker();
   connectSocket();
   setupFeedObserver();
   showView('feed', { skipReload: true });
   loadFeed(true);
   loadConversations();
-  if (state.me.settings.pushNotifications && 'Notification' in window && Notification.permission === 'default') {
-    // Ask once, quietly, after the app is actually usable.
-    setTimeout(() => Notification.requestPermission().then(refreshNotifPermRow), 1200);
+  if (state.me.settings.pushNotifications && 'Notification' in window) {
+    if (Notification.permission === 'granted') {
+      maybeSubscribeToPush();
+    } else if (Notification.permission === 'default') {
+      // Ask once, quietly, after the app is actually usable.
+      setTimeout(() => {
+        Notification.requestPermission().then((perm) => {
+          refreshNotifPermRow();
+          if (perm === 'granted') maybeSubscribeToPush();
+        });
+      }, 1200);
+    }
   }
 }
 boot();
