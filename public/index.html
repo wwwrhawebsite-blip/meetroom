@@ -34,31 +34,28 @@
     --glass-border:rgba(255,255,255,.6);
     --ig-gradient: linear-gradient(45deg,#f9ce34 0%,#ee2a7b 45%,#46c4ef 100%);
     --vh100: 100vh;
+    --ok-check: #8e8e93;
+    --read-check: #34b7f1;
   }
-  /* True dark theme — applied when the Dark mode setting is on */
-  body.dark-theme{
+  /* -------- actual dark mode: swapped in by JS via [data-theme="dark"]
+     on <html>, driven by the Dark mode toggle in Settings -------- */
+  html[data-theme="dark"]{
     --ink-900:#0e0f13;
     --ink-850:#15161c;
-    --ink-800:#1a1b22;
-    --ink-700:#22232c;
-    --ink-650:#2c2d38;
-    --line:#2c2d38;
-    --line-soft:#22232c;
-    --paper:#f0f0f2;
-    --paper-dim:#9a9ba6;
-    --paper-faint:#5c5d6a;
-    --glass:rgba(255,255,255,.05);
-    --glass-strong:rgba(30,31,38,.92);
+    --ink-800:#1a1c23;
+    --ink-700:#22242c;
+    --ink-650:#2c2f39;
+    --line:#2c2f39;
+    --line-soft:#22242c;
+    --paper:#f2f2f3;
+    --paper-dim:#9a9ba5;
+    --paper-faint:#63656f;
+    --glass:rgba(24,25,31,.68);
+    --glass-strong:rgba(24,25,31,.88);
     --glass-border:rgba(255,255,255,.08);
     --shadow: 0 8px 32px rgba(0,0,0,.45);
   }
-  body.dark-theme #phoneFrame,
-  body.dark-theme{ background-color:#0e0f13; }
-  body.dark-theme input[type=text], body.dark-theme input[type=password],
-  body.dark-theme input[type=email], body.dark-theme textarea, body.dark-theme select{
-    color:var(--paper);
-  }
-
+  html[data-theme="dark"] body{ background-color:#0e0f13; }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
@@ -361,22 +358,26 @@
   .bubble.shared-post .sp-media{ width:100%; aspect-ratio:1/1; background:#0c0d12; }
   .bubble.shared-post .sp-media img{ width:100%; height:100%; object-fit:cover; }
   .bubble.shared-post .sp-body{ padding:8px 10px; font-size:12.5px; }
-  .bubble-time{ font-size:10.5px; color:var(--paper-faint); margin-top:3px; padding:0 4px; display:flex; align-items:center; justify-content:flex-end; gap:3px; }
+  .bubble-time{ font-size:10.5px; color:var(--paper-faint); margin-top:3px; padding:0 4px; display:flex; align-items:center; gap:3px; }
+  .bubble-row.me .bubble-time{ justify-content:flex-end; }
   .bubble-row.them .bubble-time{ justify-content:flex-start; }
-  .tick{ color:rgba(255,255,255,.65); flex-shrink:0; vertical-align:middle; }
-  .bubble-row.them .tick{ display:none; }
-  .tick.tick-seen{ color:#53bdeb; }
+  /* WhatsApp-style read receipt ticks */
+  .msg-ticks{ display:inline-flex; align-items:center; line-height:0; }
+  .msg-ticks svg{ width:15px; height:15px; }
+  .msg-ticks.sent{ color:var(--ok-check); }
+  .msg-ticks.delivered{ color:var(--ok-check); }
+  .msg-ticks.read{ color:var(--read-check); }
   .typing-indicator{ font-size:12.5px; color:var(--paper-faint); padding:0 14px 6px; font-style:italic; height:16px; flex-shrink:0; }
-
-  /* -------- WhatsApp-style composer: pill input (with attach icon
-     tucked inside on the left) + a separate circular send button
-     fixed to the right, matching WhatsApp's chat bar layout -------- */
-  .chat-input-row{ padding:8px 10px; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-top:1px solid var(--glass-border); display:flex; gap:8px; flex-shrink:0; align-items:center; }
-  .chat-input-pill{ flex:1; min-width:0; display:flex; align-items:center; gap:4px; background:var(--ink-700); border:1px solid var(--line); border-radius:24px; padding:4px 6px 4px 4px; }
-  .chat-input-pill input[type=text]{ border:none; background:none; padding:8px 4px; font-size:16px; border-radius:0; }
-  .chat-input-pill input[type=text]:focus{ border-color:transparent; }
-  .chat-attach-btn{ width:34px; height:34px; border-radius:50%; border:none; background:none; color:var(--paper-dim); display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
-  .chat-send-fab{ width:42px; height:42px; border-radius:50%; flex-shrink:0; }
+  /* WhatsApp-style composer: rounded pill holds the text field with
+     the attach (paperclip) button tucked inside it on the right; a
+     separate circular accent button sits outside to send. */
+  .chat-input-row{ padding:8px 10px; background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-top:1px solid var(--glass-border); display:flex; gap:8px; flex-shrink:0; align-items:flex-end; }
+  .wa-input-pill{ flex:1; min-width:0; display:flex; align-items:center; background:var(--ink-800); border:1px solid var(--line); border-radius:24px; padding:4px 4px 4px 16px; }
+  .wa-input-pill input[type=text]{ border:none; background:none; padding:8px 4px; font-size:16px; flex:1; min-width:0; }
+  .chat-input-row input[type=text]{ border-radius:22px; padding:11px 16px; font-size:16px; }
+  .chat-attach-btn{ width:36px; height:36px; border-radius:50%; border:none; background:none; color:var(--paper-dim); display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
+  .chat-attach-btn:hover{ background:var(--ink-700); }
+  .chat-send-btn{ width:42px; height:42px; border-radius:50%; flex-shrink:0; }
   .empty-chat{ flex:1; display:flex; align-items:center; justify-content:center; color:var(--paper-faint); padding:20px; text-align:center; }
   .chat-media-preview{ padding:8px 12px 0; display:none; position:relative; }
   .chat-media-preview img{ max-height:140px; border-radius:10px; }
@@ -641,7 +642,7 @@
         <div class="settings-section">
           <h3>Appearance &amp; data</h3>
           <div class="setting-row">
-            <div><div class="label">Dark mode</div><div class="desc">Switch the whole app to a true dark theme</div></div>
+            <div><div class="label">Dark mode</div><div class="desc">Switch the whole app to a dark color scheme</div></div>
             <label class="switch"><input type="checkbox" data-setting="darkMode"><span class="track"></span></label>
           </div>
           <div class="setting-row">
@@ -734,6 +735,7 @@ const state = {
   callVideoOn: true,
   callStartedAt: null,
   callTimerInterval: null,
+  callRingTimeout: null,
   onlineUserIds: new Set(),
   chatMediaData: null,
   groupMediaData: null,
@@ -826,6 +828,15 @@ function applyAccentColor(hex) {
   if (!hex) return;
   document.documentElement.style.setProperty('--amber', hex);
 }
+// Applies (and remembers) the dark/light theme instantly — cached in
+// localStorage so it's correct on next load even before /me responds.
+function applyTheme(isDark) {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem('ydd_dark', isDark ? '1' : '0');
+}
+// Apply a cached theme immediately on script load so there's no
+// light-mode flash while we wait for login/settings to come back.
+applyTheme(localStorage.getItem('ydd_dark') === '1');
 
 /* ==================================================================
    NOTIFICATIONS — Web Notification API + a synthesized ringtone
@@ -1494,11 +1505,11 @@ async function openChatWith(user) {
       </button>
       <div class="avatar-wrap">${avatarHTML(user)}<span class="dot ${state.onlineUserIds.has(user.id) ? 'online' : ''}" data-presence-dot="${user.id}"></span></div>
       <div class="who"><div class="name" style="cursor:pointer;" id="chatHeadName">${escapeHTML(user.name)}</div><div class="status" data-presence-text="${user.id}">${state.onlineUserIds.has(user.id) ? 'Online' : 'Offline'}</div></div>
-      <button class="btn btn-icon" id="callVideoBtn" title="Video call">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-      </button>
       <button class="btn btn-icon" id="callAudioBtn" title="Voice call">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6 6l1.1-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2.1z"/></svg>
+      </button>
+      <button class="btn btn-icon" id="callVideoBtn" title="Video call">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
       </button>
       <button class="btn btn-icon" id="chatSettingsBtn" title="Chat settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
@@ -1508,13 +1519,11 @@ async function openChatWith(user) {
     <div class="typing-indicator" id="typingIndicator"></div>
     <div class="chat-media-preview" id="chatMediaPreview"></div>
     <div class="chat-input-row">
-      <div class="chat-input-pill">
-        <label class="chat-attach-btn" title="Send a photo">
-          📎<input type="file" accept="image/*" id="chatAttachFile" class="hidden">
-        </label>
-        <input type="text" id="chatInput" placeholder="Message">
-      </div>
-      <button class="btn btn-primary btn-icon chat-send-fab" id="chatSendBtn">➤</button>
+      <label class="chat-attach-btn" title="Send a photo">
+        📎<input type="file" accept="image/*" id="chatAttachFile" class="hidden">
+      </label>
+      <input type="text" id="chatInput" placeholder="Write a message…">
+      <button class="btn btn-primary btn-icon" id="chatSendBtn">➤</button>
     </div>`;
   document.getElementById('chatHeadName').addEventListener('click', () => showProfile(user.username));
   document.getElementById('callAudioBtn').addEventListener('click', () => startCall(user, 'audio'));
@@ -1531,7 +1540,6 @@ async function openChatWith(user) {
     body.innerHTML = msgs.map(m => bubbleHTML(m)).join('');
     body.scrollTop = body.scrollHeight;
     loadConversations();
-    markConversationSeen(user.id);
   } catch (err) { toast(err.message); }
 
   const attachInput = document.getElementById('chatAttachFile');
@@ -1577,28 +1585,6 @@ async function openChatWith(user) {
   });
 }
 
-// Tell the server (and the other person, via socket) that we've seen
-// their messages — this is what lights the double-check marks blue,
-// WhatsApp-style. Only fires when the Read receipts setting is on.
-function markConversationSeen(peerId) {
-  if (!state.me?.settings?.readReceipts) return;
-  if (!state.socket) return;
-  state.socket.emit('dm:seen', { peerId });
-}
-
-function tickHTML(m, mine) {
-  if (!mine) return '';
-  // status precedence: seen (blue double) > delivered (grey double) > sent (grey single)
-  const status = m.status || (m.seen_at || m.seen ? 'seen' : (m.delivered_at || m.delivered ? 'delivered' : 'sent'));
-  if (status === 'seen') {
-    return `<svg class="tick tick-seen" viewBox="0 0 20 12" width="16" height="10"><path d="M0.5 6.5L4 10L9 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 6.5L10 10L16 2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
-  }
-  if (status === 'delivered') {
-    return `<svg class="tick" viewBox="0 0 20 12" width="16" height="10"><path d="M0.5 6.5L4 10L9 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 6.5L10 10L16 2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
-  }
-  return `<svg class="tick" viewBox="0 0 20 12" width="16" height="10"><path d="M2 6.5L6.5 10.5L18 1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
-}
-
 function bubbleHTML(m) {
   const mine = m.sender_id === state.me.id;
   if (m.shared_post_id && m.shared_post) {
@@ -1606,12 +1592,12 @@ function bubbleHTML(m) {
     return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble shared-post" data-goto-post="${sp.id}">
       ${sp.image ? `<div class="sp-media"><img src="${sp.image}" loading="lazy"></div>` : ''}
       <div class="sp-body"><b>${escapeHTML(sp.author.name)}</b><br>${escapeHTML((sp.content || '').slice(0, 80))}</div>
-    </div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)} ${tickHTML(m, mine)}</div></div></div>`;
+    </div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
   }
   if (m.media_type === 'image' && m.media) {
-    return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble media-bubble"><img src="${m.media}" loading="lazy" data-open-zoom>${m.text ? `<div style="padding:6px 4px 0;font-size:13.5px;">${escapeHTML(m.text)}</div>` : ''}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)} ${tickHTML(m, mine)}</div></div></div>`;
+    return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble media-bubble"><img src="${m.media}" loading="lazy" data-open-zoom>${m.text ? `<div style="padding:6px 4px 0;font-size:13.5px;">${escapeHTML(m.text)}</div>` : ''}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
   }
-  return `<div class="bubble-row ${mine ? 'me' : 'them'}" data-msg-id="${m.id || ''}"><div><div class="bubble">${escapeHTML(m.text)}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)} ${tickHTML(m, mine)}</div></div></div>`;
+  return `<div class="bubble-row ${mine ? 'me' : 'them'}"><div><div class="bubble">${escapeHTML(m.text)}</div><div class="bubble-time" style="text-align:${mine ? 'right' : 'left'};">${timeShort(m.created_at)}</div></div></div>`;
 }
 
 document.getElementById('chatPane').addEventListener('click', (e) => {
@@ -1706,13 +1692,11 @@ async function openGroup(id, name) {
     <div class="chat-body" id="groupBody"></div>
     <div class="chat-media-preview" id="groupMediaPreview"></div>
     <div class="chat-input-row">
-      <div class="chat-input-pill">
-        <label class="chat-attach-btn" title="Send a photo">
-          📎<input type="file" accept="image/*" id="groupAttachFile" class="hidden">
-        </label>
-        <input type="text" id="groupInput" placeholder="Message">
-      </div>
-      <button class="btn btn-primary btn-icon chat-send-fab" id="groupSendBtn">➤</button>
+      <label class="chat-attach-btn" title="Send a photo">
+        📎<input type="file" accept="image/*" id="groupAttachFile" class="hidden">
+      </label>
+      <input type="text" id="groupInput" placeholder="Message the group…">
+      <button class="btn btn-primary btn-icon" id="groupSendBtn">➤</button>
     </div>`;
   const backBtn = document.getElementById('groupBackBtn');
   if (backBtn) backBtn.addEventListener('click', () => closeMobilePane('groups'));
@@ -1954,7 +1938,7 @@ async function loadSettings() {
   });
   updatePremiumUI();
   applyAccentColor(me.settings.accentColor);
-  applyDarkMode(me.settings.darkMode);
+  applyTheme(!!me.settings.darkMode);
 }
 function updatePremiumUI() {
   const isPremium = state.me.settings.accountType === 'premium';
@@ -1979,29 +1963,21 @@ document.querySelectorAll('[data-setting]').forEach(el => {
   el.addEventListener('change', async () => {
     const key = el.dataset.setting;
     const value = el.type === 'checkbox' ? el.checked : el.value;
-    // Apply visual settings immediately, before the network round-trip,
-    // so toggles always feel like they "worked" even on a slow connection.
+    // Apply instantly on the client so the toggle always feels
+    // "working" even before (or if) the server round-trip finishes.
     if (key === 'accentColor') applyAccentColor(value);
-    if (key === 'darkMode') applyDarkMode(value);
+    if (key === 'darkMode') applyTheme(value);
     try {
       const settings = await api('/settings', { method: 'PUT', body: { [key]: value } });
       state.me = { ...state.me, settings };
       toast('Setting saved.');
     } catch (err) {
-      // Roll back the optimistic UI change if the save failed.
-      if (key === 'darkMode') applyDarkMode(!value);
-      if (el.type === 'checkbox') el.checked = !value;
-      toast(err.message);
+      // Server didn't save it — still keep the visual change (theme/
+      // accent) applied locally, but tell the user it didn't persist.
+      toast('Saved on this device, but the server didn\'t confirm: ' + err.message);
     }
   });
 });
-
-// Applies/removes the true dark theme across the whole app.
-function applyDarkMode(on) {
-  document.body.classList.toggle('dark-theme', !!on);
-  const el = document.querySelector('[data-setting="darkMode"]');
-  if (el && el.checked !== !!on) el.checked = !!on;
-}
 
 document.getElementById('notifPermRow').addEventListener('click', requestNotifPermission);
 
@@ -2047,7 +2023,6 @@ function connectSocket() {
     if (state.activeConvUserId === msg.sender_id && state.view === 'chat') {
       const body = document.getElementById('chatBody');
       if (body) { body.insertAdjacentHTML('beforeend', bubbleHTML(msg)); body.scrollTop = body.scrollHeight; }
-      markConversationSeen(msg.sender_id);
     }
     if (state.view === 'chat') loadConversations();
     if (!isMuted('conv', msg.sender_id)) pushNotify('New message', msg.text || '📷 Photo', { tag: 'dm-' + msg.sender_id });
@@ -2065,13 +2040,6 @@ function connectSocket() {
     el.textContent = 'typing…';
     clearTimeout(el._t);
     el._t = setTimeout(() => { el.textContent = ''; }, 2000);
-  });
-  // The other person has seen our messages — flip our sent ticks to blue.
-  state.socket.on('dm:seen', ({ by }) => {
-    if (state.activeConvUserId !== by) return;
-    document.querySelectorAll('.bubble-row.me .tick').forEach(el => {
-      el.outerHTML = tickHTML({ status: 'seen' }, true);
-    });
   });
 
   state.socket.on('group:receive', (msg) => {
@@ -2101,6 +2069,8 @@ function connectSocket() {
   // -------- WebRTC calling --------
   state.socket.on('call:incoming', ({ from, fromUser, kind, offer }) => showIncomingCall(from, fromUser, kind, offer));
   state.socket.on('call:answered', async ({ answer }) => {
+    clearTimeout(state.callRingTimeout);
+    state.callRingTimeout = null;
     await state.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
     setCallStatus('Connected');
     stopRingtone();
@@ -2111,12 +2081,20 @@ function connectSocket() {
   });
   state.socket.on('call:declined', () => { toast('Call declined.'); stopRingtone(); endCall(false); });
   state.socket.on('call:ended', () => { toast('Call ended.'); stopRingtone(); endCall(false); });
+  // Sent by the server immediately if the person you're calling isn't
+  // connected at all — otherwise you'd just sit on "Calling…" forever.
+  state.socket.on('call:unreachable', () => {
+    toast("They're not reachable right now.");
+    stopRingtone();
+    endCall(false);
+  });
   state.socket.on('call:peer_mute', ({ muted }) => setCallStatus(muted ? 'They muted their mic' : 'Connected'));
   state.socket.on('call:peer_video_toggle', ({ videoOn }) => setCallStatus(videoOn ? 'Connected' : 'Their video is off'));
 }
 
 /* -------- calling UI + WebRTC -------- */
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
+const CALL_RING_TIMEOUT_MS = 30000; // give up ringing after 30s of no answer
 
 async function startCall(user, kind) {
   state.callPeerId = user.id;
@@ -2138,6 +2116,17 @@ async function startCall(user, kind) {
   const offer = await state.peerConnection.createOffer();
   await state.peerConnection.setLocalDescription(offer);
   state.socket.emit('call:invite', { to: user.id, kind, offer });
+
+  // If nobody answers (or declines/ends) within the timeout, stop
+  // ringing instead of leaving the caller stuck on "Calling…".
+  clearTimeout(state.callRingTimeout);
+  state.callRingTimeout = setTimeout(() => {
+    if (state.callPeerId === user.id && !state.callStartedAt) {
+      toast('No answer.');
+      state.socket.emit('call:end', { to: user.id });
+      endCall(false);
+    }
+  }, CALL_RING_TIMEOUT_MS);
 }
 
 function showIncomingCall(fromId, fromUser, kind, offer) {
@@ -2250,6 +2239,8 @@ function startCallTimer() {
 }
 function endCall() {
   stopRingtone();
+  clearTimeout(state.callRingTimeout);
+  state.callRingTimeout = null;
   if (state.peerConnection) { state.peerConnection.close(); state.peerConnection = null; }
   if (state.localStream) { state.localStream.getTracks().forEach(t => t.stop()); state.localStream = null; }
   clearInterval(state.callTimerInterval);
@@ -2285,7 +2276,7 @@ async function boot() {
   document.getElementById('appView').classList.add('active');
   renderRailAvatar();
   applyAccentColor(state.me.settings.accentColor);
-  applyDarkMode(state.me.settings.darkMode);
+  applyTheme(!!state.me.settings.darkMode);
   connectSocket();
   setupFeedObserver();
   showView('feed', { skipReload: true });
