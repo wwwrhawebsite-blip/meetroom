@@ -27,8 +27,6 @@
       infinite scroll instead of loading up to 100 posts at once.
    5. Indexes were added for every hot lookup path (posts by user,
       likes/comments/shares by post, messages by conversation).
-   6. Conversation list is now one JOIN query instead of N+1 (was
-      3 queries per conversation row before).
    ============================================================ */
 
 require('dotenv').config();
@@ -44,9 +42,14 @@ const mysql = require('mysql2/promise');
 const multer = require('multer');
 const { Server } = require('socket.io');
 
+// web-push is optional — if it isn't installed or VAPID keys aren't
+// configured, real mobile push notifications are simply disabled and
+// the app falls back to in-app/socket notifications only.
+let webpush = null;
+try { webpush = require('web-push'); } catch (e) { webpush = null; }
+
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'day-diary-dev-secret-change-me';
-const PREMIUM_MIN_FOLLOWERS = 20; // premium accounts require this many followers
 
 const DB_CONFIG = {
   host: process.env.DB_HOST || 'localhost',
@@ -64,6 +67,25 @@ if (!process.env.DB_PASSWORD) {
 }
 if (!process.env.JWT_SECRET) {
   console.warn('⚠️  JWT_SECRET is not set — using the insecure default. Set it in .env before deploying.');
+}
+
+// ---------------------------------------------------------------
+// WEB PUSH (real mobile notifications, even when the app/tab is
+// closed). Generate a key pair once with:
+//   npx web-push generate-vapid-keys
+// then set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY / VAPID_SUBJECT in
+// your .env. Without these, push is silently disabled.
+// ---------------------------------------------------------------
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@example.com';
+const PUSH_ENABLED = !!(webpush && VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY);
+
+if (webpush && PUSH_ENABLED) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+  console.log('Web push notifications: enabled.');
+} else {
+  console.warn('⚠️  Web push notifications are disabled (missing the web-push package or VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY in .env). Mobile users will only get notifications while the app is open in front of them.');
 }
 
 let pool;
@@ -137,10 +159,24 @@ async function setupDatabase() {
   await migrateColumn('messages', 'media_type', "VARCHAR(10) NOT NULL DEFAULT 'none'");
   await migrateColumn('messages', 'shared_post_id', 'INT NULL');
   await migrateColumn('messages', 'deleted_for', 'VARCHAR(50) NULL'); // csv of user ids who cleared this thread
-  await migrateColumn('messages', 'is_delivered', 'TINYINT(1) NOT NULL DEFAULT 0'); // WhatsApp-style ticks
   await migrateColumn('group_members', 'is_admin', 'TINYINT(1) NOT NULL DEFAULT 0');
   await migrateColumn('groups', 'photo', 'LONGTEXT NULL');
   await migrateColumn('groups', 'description', 'VARCHAR(500) NULL');
+
+  // push_subscriptions may not exist on installs created before push
+  // support was added — create it here too, so upgrades don't need
+  // a manual migration step.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      endpoint VARCHAR(1000) NOT NULL,
+      keys_json TEXT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uniq_sub (user_id, endpoint(255)),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `).catch((err) => { if (err.errno !== 1061) throw err; });
 
   console.log('Database ready (day_diary).');
 }
@@ -247,6 +283,61 @@ function publicUser(row) {
 }
 
 // ---------------------------------------------------------------
+// PUSH NOTIFICATIONS — send a real OS-level push to every device
+// a user has subscribed on. Silently a no-op if push isn't
+// configured, the user has pushNotifications off, or has no
+// subscriptions (e.g. hasn't granted permission on any device).
+// ---------------------------------------------------------------
+async function sendPushToUser(userId, { title, body, tag, url }) {
+  if (!PUSH_ENABLED) return;
+  try {
+    const user = await get('SELECT settings FROM users WHERE id = ?', [userId]);
+    const settings = parseSettings(user);
+    if (!settings.pushNotifications) return;
+    const subs = await all('SELECT * FROM push_subscriptions WHERE user_id = ?', [userId]);
+    if (!subs.length) return;
+    const payload = JSON.stringify({ title, body, tag, url: url || '/' });
+    await Promise.all(subs.map(async (s) => {
+      try {
+        const subscription = { endpoint: s.endpoint, keys: JSON.parse(s.keys_json || '{}') };
+        await webpush.sendNotification(subscription, payload);
+      } catch (err) {
+        // 404/410 = the subscription is gone (uninstalled, expired, etc.) — clean it up.
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          await run('DELETE FROM push_subscriptions WHERE id = ?', [s.id]);
+        }
+      }
+    }));
+  } catch (err) {
+    console.error('Push send failed:', err.message);
+  }
+}
+
+// ---------------------------------------------------------------
+// PUSH SUBSCRIPTION ROUTES
+// ---------------------------------------------------------------
+app.get('/api/push/vapid-public-key', (req, res) => {
+  res.json({ key: PUSH_ENABLED ? VAPID_PUBLIC_KEY : null });
+});
+
+app.post('/api/push/subscribe', authMiddleware, async (req, res) => {
+  if (!PUSH_ENABLED) return res.status(503).json({ error: 'Push notifications are not configured on this server.' });
+  const sub = req.body;
+  if (!sub || !sub.endpoint) return res.status(400).json({ error: 'Invalid push subscription.' });
+  await run(
+    'INSERT INTO push_subscriptions (user_id, endpoint, keys_json) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE keys_json = VALUES(keys_json)',
+    [req.user.id, sub.endpoint, JSON.stringify(sub.keys || {})]
+  );
+  res.json({ ok: true });
+});
+
+app.post('/api/push/unsubscribe', authMiddleware, async (req, res) => {
+  const { endpoint } = req.body;
+  if (endpoint) await run('DELETE FROM push_subscriptions WHERE user_id = ? AND endpoint = ?', [req.user.id, endpoint]);
+  res.json({ ok: true });
+});
+
+// ---------------------------------------------------------------
 // UPLOAD ROUTE — photos only. Returns a short URL to store on a
 // post/message/profile instead of embedding base64 everywhere.
 // ---------------------------------------------------------------
@@ -307,8 +398,7 @@ app.post('/api/login', async (req, res) => {
 // ---------------------------------------------------------------
 app.get('/api/me', authMiddleware, async (req, res) => {
   const user = await get('SELECT * FROM users WHERE id = ?', [req.user.id]);
-  const followers = await get('SELECT COUNT(*) c FROM follows WHERE following_id = ?', [req.user.id]);
-  res.json({ ...publicUser(user), settings: parseSettings(user), followers: followers.c, premiumMinFollowers: PREMIUM_MIN_FOLLOWERS });
+  res.json({ ...publicUser(user), settings: parseSettings(user) });
 });
 
 app.get('/api/users/:username', authMiddleware, async (req, res) => {
@@ -338,18 +428,6 @@ app.put('/api/settings', authMiddleware, async (req, res) => {
   const user = await get('SELECT settings FROM users WHERE id = ?', [req.user.id]);
   const current = parseSettings(user);
   const merged = { ...current, ...req.body };
-
-  // Premium accounts require a minimum follower count — enforced
-  // server-side so it can't be bypassed by editing client state.
-  if (merged.accountType === 'premium' && current.accountType !== 'premium') {
-    const followers = await get('SELECT COUNT(*) c FROM follows WHERE following_id = ?', [req.user.id]);
-    if (followers.c < PREMIUM_MIN_FOLLOWERS) {
-      return res.status(403).json({
-        error: `You need at least ${PREMIUM_MIN_FOLLOWERS} followers to go Premium (you have ${followers.c}).`
-      });
-    }
-  }
-
   await run('UPDATE users SET settings = ? WHERE id = ?', [JSON.stringify(merged), req.user.id]);
   res.json(merged);
 });
@@ -384,6 +462,7 @@ app.post('/api/follow/:userId', authMiddleware, async (req, res) => {
   if (targetId === req.user.id) return res.status(400).json({ error: "You can't follow yourself." });
   await run('INSERT IGNORE INTO follows (follower_id, following_id) VALUES (?, ?)', [req.user.id, targetId]);
   io.to(`user:${targetId}`).emit('notification', { type: 'follow', from: req.user });
+  sendPushToUser(targetId, { title: 'New follower', body: `${req.user.username} started following you.`, tag: 'follow-' + req.user.id, url: '/' });
   res.json({ ok: true });
 });
 
@@ -415,6 +494,9 @@ function detectMediaType(dataUrlOrPath) {
 
 // Single JOIN + correlated-subquery query instead of N+1 per-post
 // round trips. This is the main fix for the slow-loading feed.
+// `viewerId` is also used to enforce private accounts: a private
+// author's posts are only included for the author themself or an
+// accepted follower.
 async function fetchPostsFast({ where, params, viewerId, limit, before }) {
   const clauses = [where];
   const values = [...params];
@@ -422,6 +504,14 @@ async function fetchPostsFast({ where, params, viewerId, limit, before }) {
     clauses.push('posts.id < ?');
     values.push(before);
   }
+  // Private-account guard: hide posts from private authors unless the
+  // viewer is the author or already follows them.
+  clauses.push(`(
+    posts.user_id = ?
+    OR COALESCE(JSON_EXTRACT(users.settings, '$.privateAccount'), false) = false
+    OR EXISTS(SELECT 1 FROM follows WHERE follows.follower_id = ? AND follows.following_id = posts.user_id)
+  )`);
+  values.push(viewerId, viewerId);
   const sql = `
     SELECT posts.id, posts.content, posts.image, posts.media_type, posts.created_at, posts.user_id,
            users.username, users.name, users.bio, users.avatar, users.settings AS author_settings,
@@ -505,7 +595,10 @@ app.post('/api/posts/:id/like', authMiddleware, async (req, res) => {
   } else {
     await run('INSERT INTO likes (post_id, user_id) VALUES (?, ?)', [postId, req.user.id]);
     const post = await get('SELECT user_id FROM posts WHERE id = ?', [postId]);
-    if (post) io.to(`user:${post.user_id}`).emit('notification', { type: 'like', from: req.user, postId });
+    if (post) {
+      io.to(`user:${post.user_id}`).emit('notification', { type: 'like', from: req.user, postId });
+      sendPushToUser(post.user_id, { title: 'New like', body: `${req.user.username} liked your entry.`, tag: 'post-' + postId, url: '/' });
+    }
   }
   const likeCount = await get('SELECT COUNT(*) c FROM likes WHERE post_id = ?', [postId]);
   res.json({ likedByMe: !existing, likeCount: likeCount.c });
@@ -530,7 +623,10 @@ app.post('/api/posts/:id/comments', authMiddleware, async (req, res) => {
   const result = await run('INSERT INTO comments (post_id, user_id, text) VALUES (?, ?, ?)',
     [req.params.id, req.user.id, text.trim()]);
   const post = await get('SELECT user_id FROM posts WHERE id = ?', [req.params.id]);
-  if (post) io.to(`user:${post.user_id}`).emit('notification', { type: 'comment', from: req.user, postId: req.params.id });
+  if (post) {
+    io.to(`user:${post.user_id}`).emit('notification', { type: 'comment', from: req.user, postId: req.params.id });
+    sendPushToUser(post.user_id, { title: 'New comment', body: `${req.user.username} commented on your entry.`, tag: 'post-' + req.params.id, url: '/' });
+  }
   res.json({ id: result.lastID, text: text.trim(), author: req.user, createdAt: new Date().toISOString() });
 });
 
@@ -548,19 +644,20 @@ app.post('/api/posts/:id/share-to/:userId', authMiddleware, async (req, res) => 
   if (blocked) return res.status(403).json({ error: 'You cannot message this user.' });
 
   const result = await run(
-    'INSERT INTO messages (sender_id, receiver_id, text, media, media_type, shared_post_id, is_delivered) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [req.user.id, toId, '', post.image || null, post.media_type || 'none', post.id, onlineUsers.has(toId) ? 1 : 0]
+    'INSERT INTO messages (sender_id, receiver_id, text, media, media_type, shared_post_id) VALUES (?, ?, ?, ?, ?, ?)',
+    [req.user.id, toId, '', post.image || null, post.media_type || 'none', post.id]
   );
   await run('INSERT INTO shares (post_id, user_id) VALUES (?, ?)', [post.id, req.user.id]);
   const author = await get('SELECT * FROM users WHERE id = ?', [post.user_id]);
   const msg = {
     id: result.lastID, sender_id: req.user.id, receiver_id: toId, text: '',
     media: post.image || null, media_type: post.media_type || 'none',
-    shared_post_id: post.id, is_delivered: onlineUsers.has(toId) ? 1 : 0, is_read: 0,
+    shared_post_id: post.id,
     shared_post: { id: post.id, content: post.content, image: post.image, mediaType: post.media_type, author: publicUser(author) },
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(), is_read: 0
   };
   io.to(`user:${toId}`).emit('dm:receive', msg);
+  sendPushToUser(toId, { title: req.user.username, body: '📎 Shared an entry with you', tag: 'dm-' + req.user.id, url: '/' });
   res.json({ ok: true });
 });
 
@@ -592,21 +689,9 @@ app.get('/api/messages/:userId', authMiddleware, async (req, res) => {
      ORDER BY created_at ASC LIMIT 200`,
     [req.user.id, otherId, otherId, req.user.id, req.user.id]
   );
-
-  // Figure out which of THEIR messages were unread before this view,
-  // so we can tell them (via a WhatsApp-style "seen" receipt) which
-  // ones just got read — but only if the reader (us) allows read
-  // receipts. Turning this off is mutual, like WhatsApp: you stop
-  // sending them, and you also won't be told when others read yours.
-  const myReadReceipts = parseSettings(await get('SELECT settings FROM users WHERE id = ?', [req.user.id])).readReceipts;
-  const newlyRead = rows.filter(m => m.sender_id === otherId && m.receiver_id === req.user.id && !m.is_read).map(m => m.id);
-
+  const hadUnread = rows.some(m => m.sender_id === otherId && m.receiver_id === req.user.id && !m.is_read);
   await run(`UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?`, [otherId, req.user.id]);
-
-  if (newlyRead.length && myReadReceipts) {
-    io.to(`user:${otherId}`).emit('dm:seen', { by: req.user.id, messageIds: newlyRead });
-  }
-
+  if (hadUnread) io.to(`user:${otherId}`).emit('dm:seen', { by: req.user.id });
   res.json(await attachSharedPost(rows));
 });
 
@@ -628,38 +713,29 @@ app.delete('/api/messages/:userId', authMiddleware, async (req, res) => {
   res.json({ ok: true });
 });
 
-// Single JOIN query instead of the old N+1-per-conversation loop —
-// this is what made the messages tab slow to open before.
 app.get('/api/conversations', authMiddleware, async (req, res) => {
   const rows = await all(
-    `SELECT
-       other.id, other.username, other.name, other.bio, other.avatar, other.settings, other.last_seen, other.created_at,
-       lm.id AS lm_id, lm.text AS lm_text, lm.media_type AS lm_media_type, lm.shared_post_id AS lm_shared_post_id,
-       lm.created_at AS lm_created_at, lm.sender_id AS lm_sender_id, lm.is_read AS lm_is_read, lm.is_delivered AS lm_is_delivered,
-       (SELECT COUNT(*) FROM messages m2 WHERE m2.sender_id = other.id AND m2.receiver_id = ? AND m2.is_read = 0) AS unread
-     FROM (
-       SELECT DISTINCT CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END AS other_id
-       FROM messages WHERE group_id IS NULL AND (sender_id = ? OR receiver_id = ?)
-     ) t
-     JOIN users other ON other.id = t.other_id
-     LEFT JOIN messages lm ON lm.id = (
-       SELECT id FROM messages m3
-       WHERE m3.group_id IS NULL AND NOT FIND_IN_SET(?, COALESCE(m3.deleted_for, ''))
-         AND ((m3.sender_id = ? AND m3.receiver_id = other.id) OR (m3.sender_id = other.id AND m3.receiver_id = ?))
-       ORDER BY m3.created_at DESC LIMIT 1
-     )`,
-    [req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id]
+    `SELECT DISTINCT CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END AS other_id
+     FROM messages WHERE group_id IS NULL AND (sender_id = ? OR receiver_id = ?)`,
+    [req.user.id, req.user.id, req.user.id]
   );
-  const out = rows
-    .filter(r => r.lm_id) // conversation fully cleared by this user
-    .map(r => ({
-      user: publicUser(r),
-      lastMessage: {
-        id: r.lm_id, text: r.lm_text, media_type: r.lm_media_type, shared_post_id: r.lm_shared_post_id,
-        created_at: r.lm_created_at, sender_id: r.lm_sender_id, is_read: r.lm_is_read, is_delivered: r.lm_is_delivered
-      },
-      unread: r.unread
-    }));
+  const out = [];
+  for (const r of rows) {
+    if (!r.other_id) continue;
+    const other = await get('SELECT * FROM users WHERE id = ?', [r.other_id]);
+    const last = await get(
+      `SELECT * FROM messages WHERE group_id IS NULL AND NOT FIND_IN_SET(?, COALESCE(deleted_for, '')) AND
+       ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+       ORDER BY created_at DESC LIMIT 1`,
+      [req.user.id, req.user.id, r.other_id, r.other_id, req.user.id]
+    );
+    if (!last) continue; // conversation was fully cleared by this user
+    const unread = await get(
+      `SELECT COUNT(*) c FROM messages WHERE sender_id = ? AND receiver_id = ? AND is_read = 0`,
+      [r.other_id, req.user.id]
+    );
+    out.push({ user: publicUser(other), lastMessage: last, unread: unread.c });
+  }
   out.sort((a, b) => new Date(b.lastMessage?.created_at || 0) - new Date(a.lastMessage?.created_at || 0));
   res.json(out);
 });
@@ -812,22 +888,34 @@ io.on('connection', async (socket) => {
     if ((!text || !text.trim()) && !hasMedia) return;
     const blocked = await get('SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?', [to, userId]);
     if (blocked) return socket.emit('error_msg', { error: 'You cannot message this user.' });
-    const delivered = onlineUsers.has(Number(to)) ? 1 : 0;
     const result = await run(
-      'INSERT INTO messages (sender_id, receiver_id, text, media, media_type, is_delivered) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, to, (text || '').trim(), media || null, hasMedia ? 'image' : 'none', delivered]
+      'INSERT INTO messages (sender_id, receiver_id, text, media, media_type) VALUES (?, ?, ?, ?, ?)',
+      [userId, to, (text || '').trim(), media || null, hasMedia ? 'image' : 'none']
     );
     const msg = {
       id: result.lastID, sender_id: userId, receiver_id: to, text: (text || '').trim(),
       media: media || null, media_type: hasMedia ? 'image' : 'none',
-      is_delivered: delivered, is_read: 0,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(), is_read: 0
     };
     io.to(`user:${to}`).emit('dm:receive', msg);
     socket.emit('dm:sent', msg);
+    sendPushToUser(to, { title: socket.user.username, body: msg.text || '📷 Photo', tag: 'dm-' + userId, url: '/' });
   });
 
   socket.on('dm:typing', ({ to }) => io.to(`user:${to}`).emit('dm:typing', { from: userId }));
+
+  // Marks the other person's messages to us as read, and tells their
+  // client (in real time) so the "seen" ticks can turn blue. This is
+  // what the Settings → Privacy → "Read receipts" toggle controls;
+  // the client only calls this when that setting is on.
+  socket.on('dm:seen', async ({ peerId }) => {
+    if (!peerId) return;
+    const { changes } = await run(
+      'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ? AND is_read = 0',
+      [peerId, userId]
+    );
+    if (changes > 0) io.to(`user:${peerId}`).emit('dm:seen', { by: userId });
+  });
 
   socket.on('group:send', async ({ groupId, text, media }) => {
     const hasMedia = !!media;
@@ -844,18 +932,15 @@ io.on('connection', async (socket) => {
       created_at: new Date().toISOString()
     };
     io.to(`group:${groupId}`).emit('group:receive', msg);
+    const members = await all('SELECT user_id FROM group_members WHERE group_id = ? AND user_id != ?', [groupId, userId]);
+    members.forEach(m => sendPushToUser(m.user_id, { title: socket.user.username, body: msg.text || '📷 Photo', tag: 'group-' + groupId, url: '/' }));
   });
 
   // -------- WebRTC call signaling (1:1 voice/video calling — this is
   // live calling, not stored "video" content, so it was kept) --------
-  socket.on('call:invite', async ({ to, kind, offer }) => {
-    // If the callee isn't connected at all, tell the caller right away
-    // instead of leaving them on "Calling…" forever with no feedback.
-    if (!onlineUsers.has(Number(to))) {
-      return socket.emit('call:unreachable', { to: Number(to) });
-    }
-    const callerRow = await get('SELECT * FROM users WHERE id = ?', [userId]);
-    io.to(`user:${to}`).emit('call:incoming', { from: userId, fromUser: publicUser(callerRow), kind, offer });
+  socket.on('call:invite', ({ to, kind, offer }) => {
+    io.to(`user:${to}`).emit('call:incoming', { from: userId, fromUser: socket.user, kind, offer });
+    sendPushToUser(to, { title: 'Incoming call', body: `${socket.user.username} is calling you`, tag: 'call-' + userId, url: '/' });
   });
   socket.on('call:answer', ({ to, answer }) => io.to(`user:${to}`).emit('call:answered', { from: userId, answer }));
   socket.on('call:ice', ({ to, candidate }) => io.to(`user:${to}`).emit('call:ice', { from: userId, candidate }));
@@ -863,11 +948,6 @@ io.on('connection', async (socket) => {
   socket.on('call:end', ({ to }) => io.to(`user:${to}`).emit('call:ended', { from: userId }));
   socket.on('call:mute', ({ to, muted }) => io.to(`user:${to}`).emit('call:peer_mute', { from: userId, muted }));
   socket.on('call:video_toggle', ({ to, videoOn }) => io.to(`user:${to}`).emit('call:peer_video_toggle', { from: userId, videoOn }));
-  // fired if a callee's device never receives the offer (e.g. app
-  // closed) so the caller doesn't ring forever with no feedback.
-  socket.on('call:unreachable_check', ({ to }) => {
-    if (!onlineUsers.has(Number(to))) socket.emit('call:unreachable', { to });
-  });
 
   socket.on('disconnect', async () => {
     const set = onlineUsers.get(userId);
